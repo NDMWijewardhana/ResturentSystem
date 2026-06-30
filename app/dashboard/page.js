@@ -140,7 +140,7 @@ export default function Dashboard() {
                 onClick={() => router.push('/time-records')}
                 className="bg-blue-50 text-blue-700 rounded-xl p-4 text-sm font-medium hover:bg-blue-100 transition">
                 ⏱️ Time Records
-              </button>
+              </button>              
               <button
                 onClick={() => router.push('/settings')}
                 className="bg-gray-50 text-gray-700 rounded-xl p-4 text-sm font-medium hover:bg-gray-100 transition">
