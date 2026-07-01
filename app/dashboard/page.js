@@ -129,10 +129,13 @@ export default function Dashboard() {
                 className="bg-green-50 text-green-700 rounded-xl p-4 text-sm font-medium hover:bg-green-100 transition">
                 ✅ Approvals
               </button>
-              <button className="bg-purple-50 text-purple-700 rounded-xl p-4 text-sm font-medium hover:bg-purple-100 transition">
+              <button 
+                onClick={() => router.push('/stock-manager')}
+                className="bg-purple-50 text-purple-700 rounded-xl p-4 text-sm font-medium hover:bg-purple-100 transition">
                 📦 Stock
               </button>
               <button 
+                onClick={() => router.push('/reports')}
                 className="bg-orange-50 text-orange-700 rounded-xl p-4 text-sm font-medium hover:bg-orange-100 transition">
                 📊 Reports
               </button>
@@ -174,6 +177,11 @@ export default function Dashboard() {
                 className="bg-orange-50 text-orange-700 rounded-xl p-4 text-sm font-medium hover:bg-orange-100 transition">
                 🏖️ Apply Leave
               </button>
+              <button
+                onClick={() => router.push('/stock')}
+                className="bg-purple-50 text-purple-700 rounded-xl p-4 text-sm font-medium hover:bg-purple-100 transition">
+                📦 Stock Request
+             </button>
             </div>
           </div>
         )}
