@@ -45,6 +45,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
+  const [required2FA, setRequired2FA] = useState(false)
 
   useEffect(() => {
     loadAll()
@@ -52,6 +53,12 @@ export default function SettingsPage() {
 
   async function loadAll() {
     setLoading(true)
+    // Check if redirected here because 2FA is required
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('require2fa') === 'true') {
+      setRequired2FA(true)
+      setActiveTab('2fa')
+    }
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/'); return }
@@ -212,32 +219,37 @@ export default function SettingsPage() {
   }
 
   async function handleVerify2FA(e) {
-    e.preventDefault()
-    setTwoFALoading(true)
-    setTwoFAError('')
+  e.preventDefault()
+  setTwoFALoading(true)
+  setTwoFAError('')
 
-    const { data: challenge, error: challengeError } =
-      await supabase.auth.mfa.challenge({ factorId })
+  const { data: challenge, error: challengeError } =
+    await supabase.auth.mfa.challenge({ factorId })
 
-    if (challengeError) {
-      setTwoFAError(challengeError.message)
-      setTwoFALoading(false)
-      return
-    }
-
-    const { error: verifyError } = await supabase.auth.mfa.verify({
-      factorId, challengeId: challenge.id, code: otp,
-    })
-
-    if (verifyError) {
-      setTwoFAError('Invalid code. Please try again.')
-      setTwoFALoading(false)
-      return
-    }
-
-    setTwoFAStep('done')
+  if (challengeError) {
+    setTwoFAError(challengeError.message)
     setTwoFALoading(false)
+    return
   }
+
+  const { error: verifyError } = await supabase.auth.mfa.verify({
+    factorId, challengeId: challenge.id, code: otp,
+  })
+
+  if (verifyError) {
+    setTwoFAError('Invalid code. Please try again.')
+    setTwoFALoading(false)
+    return
+  }
+
+  setTwoFAStep('done')
+  setTwoFALoading(false)
+
+  // If 2FA was required redirect to dashboard
+  if (required2FA) {
+    setTimeout(() => router.push('/dashboard'), 1500)
+  }
+}
 
   async function handleUnenroll() {
     setTwoFALoading(true)
@@ -653,12 +665,24 @@ export default function SettingsPage() {
                 <div className="bg-green-50 rounded-xl p-4 mb-6 text-left">
                   <p className="text-green-800 text-sm">✅ Next login will ask for your 6-digit code</p>
                 </div>
-                <button
-                  onClick={handleUnenroll} disabled={twoFALoading}
-                  className="w-full text-sm text-red-400 hover:text-red-600 py-2"
-                >
-                  {twoFALoading ? 'Removing...' : 'Remove 2FA'}
-                </button>
+                {/* Only managers can remove 2FA */}
+                {profile?.role === 'branch_manager' && (
+                  <button
+                    onClick={handleUnenroll}
+                    disabled={twoFALoading}
+                    className="w-full text-sm text-red-400 hover:text-red-600 py-2"
+                  >
+                    {twoFALoading ? 'Removing...' : 'Remove 2FA'}
+                  </button>
+                )}
+                {/* Staff see a locked message instead */}
+                {profile?.role !== 'branch_manager' && (
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-gray-500 text-xs text-center">
+                      🔒 2FA is mandatory and cannot be disabled for staff accounts
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

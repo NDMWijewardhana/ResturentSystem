@@ -200,10 +200,10 @@ export default function LoginPage() {
             <div className="bg-yellow-50 rounded-xl p-4 text-center">
               <div className="text-3xl mb-2">🔐</div>
               <p className="text-yellow-800 text-sm font-medium">
-                Your account is not protected with 2FA yet
+                 Two-Factor Authentication Required
               </p>
               <p className="text-yellow-700 text-xs mt-1">
-                We strongly recommend setting up two-factor authentication to keep your account secure.
+                Your account must be protected with 2FA before you can continue. This is required for all staff.
               </p>
             </div>
 
@@ -214,12 +214,6 @@ export default function LoginPage() {
               🔐 Set Up 2FA Now (Recommended)
             </button>
 
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="w-full bg-gray-100 text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-sm"
-            >
-              Skip for now →
-            </button>
 
             <button
               type="button"

@@ -1,190 +1,621 @@
+// @ts-nocheck
 'use client'
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
   const [profile, setProfile] = useState(null)
-  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  // Manager dashboard data
+  const [staffClockedIn, setStaffClockedIn] = useState([])
+  const [pendingLeave, setPendingLeave] = useState(0)
+  const [pendingShift, setPendingShift] = useState(0)
+  const [pendingStock, setPendingStock] = useState(0)
+  const [lowStockItems, setLowStockItems] = useState([])
+  const [weeklyHours, setWeeklyHours] = useState([])
+  const [recentActivity, setRecentActivity] = useState([])
+  const [totalStaff, setTotalStaff] = useState(0)
+
+  // Collapse states
+  const [showStaffOnDuty, setShowStaffOnDuty] = useState(false)
+  const [showPendingAlerts, setShowPendingAlerts] = useState(false)
+  const [showWeeklyHours, setShowWeeklyHours] = useState(false)
+  const [showLowStock, setShowLowStock] = useState(false)
+  const [showRecentActivity, setShowRecentActivity] = useState(false)
+
   const router = useRouter()
   const supabase = createClient()
 
+  // Live clock
   useEffect(() => {
-    async function loadProfile() {
-      // Step 1: check user session
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError || !user) {
-        console.log('No user session:', userError)
-        router.push('/')
-        return
-      }
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(interval)
+  }, [])
 
-      console.log('User found:', user.id)
-
-      // Step 2: fetch profile
-      const { data, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      if (profileError) {
-        console.log('Profile error:', profileError)
-        setError('Could not load profile: ' + profileError.message)
-        return
-      }
-
-      console.log('Profile loaded:', data)
-      setProfile(data)
-    }
-
+  useEffect(() => {
     loadProfile()
   }, [])
+
+async function loadProfile() {
+  setLoading(true)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { router.push('/'); return }
+
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('*, branch:branches(name)')
+    .eq('id', user.id)
+    .single()
+
+  setProfile(profileData)
+
+  // Check 2FA status for all users
+  const { data: factors } = await supabase.auth.mfa.listFactors()
+  const verified = factors?.totp?.filter(f => f.status === 'verified')
+
+  // If 2FA not set up redirect to settings
+  if (!verified || verified.length === 0) {
+    router.push('/settings?require2fa=true')
+    return
+  }
+
+  if (profileData?.role === 'branch_manager') {
+    await loadManagerData()
+  }
+
+  setLoading(false)
+}
+
+  async function loadManagerData() {
+    const today = new Date().toISOString().split('T')[0]
+    const monday = getMonday()
+
+    // Staff clocked in today
+    const { data: clockedIn } = await supabase
+      .from('time_records')
+      .select('*, staff:profiles!time_records_staff_id_fkey(full_name, branch:branches(name))')
+      .is('clock_out', null)
+      .gte('clock_in', today + 'T00:00:00')
+
+    setStaffClockedIn(clockedIn || [])
+
+    // Pending requests
+    const { count: leaveCount } = await supabase
+      .from('requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .eq('type', 'leave')
+
+    const { count: shiftCount } = await supabase
+      .from('requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .eq('type', 'shift_change')
+
+    const { count: stockCount } = await supabase
+      .from('stock_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+
+    setPendingLeave(leaveCount || 0)
+    setPendingShift(shiftCount || 0)
+    setPendingStock(stockCount || 0)
+
+    // Low stock items
+    const { data: stockItems } = await supabase
+      .from('stock_items')
+      .select('*')
+
+    const lowStock = (stockItems || []).filter(item =>
+      item.current_quantity <= item.min_quantity
+    )
+    setLowStockItems(lowStock)
+
+    // Weekly hours per staff
+    const { data: weekRecords } = await supabase
+      .from('time_records')
+      .select('*, staff:profiles!time_records_staff_id_fkey(full_name)')
+      .gte('clock_in', monday)
+      .not('clock_out', 'is', null)
+
+    const hoursMap = {}
+    ;(weekRecords || []).forEach(function(r) {
+      const name = r.staff?.full_name || 'Unknown'
+      if (!hoursMap[name]) hoursMap[name] = 0
+      hoursMap[name] += r.total_minutes || 0
+    })
+
+    const hoursList = Object.entries(hoursMap)
+      .map(function([name, mins]) { return { name, hours: (mins / 60).toFixed(1) } })
+      .sort(function(a, b) { return b.hours - a.hours })
+      .slice(0, 5)
+
+    setWeeklyHours(hoursList)
+
+    // Total staff
+    const { count: staffCount } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+
+    setTotalStaff(staffCount || 0)
+
+    // Recent activity
+    const activities = []
+
+    const { data: recentClockIns } = await supabase
+      .from('time_records')
+      .select('*, staff:profiles!time_records_staff_id_fkey(full_name)')
+      .order('clock_in', { ascending: false })
+      .limit(3)
+
+    ;(recentClockIns || []).forEach(function(r) {
+      activities.push({
+        type: r.clock_out ? 'clock_out' : 'clock_in',
+        text: r.staff?.full_name + (r.clock_out ? ' clocked out' : ' clocked in'),
+        time: new Date(r.clock_out || r.clock_in)
+      })
+    })
+
+    const { data: recentRequests } = await supabase
+      .from('requests')
+      .select('*, staff:profiles!requests_staff_id_fkey(full_name)')
+      .order('created_at', { ascending: false })
+      .limit(3)
+
+    ;(recentRequests || []).forEach(function(r) {
+      activities.push({
+        type: 'request',
+        text: r.staff?.full_name + ' submitted a ' + r.type.replace('_', ' ') + ' request',
+        time: new Date(r.created_at)
+      })
+    })
+
+    activities.sort(function(a, b) { return b.time - a.time })
+    setRecentActivity(activities.slice(0, 6))
+  }
+
+  function getMonday() {
+    const d = new Date()
+    const day = d.getDay()
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+    d.setDate(diff)
+    d.setHours(0, 0, 0, 0)
+    return d.toISOString()
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/')
   }
 
-  // Show error state
-  if (error) return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-        <h1 className="text-lg font-bold text-gray-800">🍽️ Restaurant System</h1>
+  function formatTime(date) {
+    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  function formatDate(date) {
+    return date.toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    })
+  }
+
+  function formatRelativeTime(date) {
+    const diff = Math.floor((new Date() - date) / 60000)
+    if (diff < 1) return 'just now'
+    if (diff < 60) return diff + 'm ago'
+    const hours = Math.floor(diff / 60)
+    if (hours < 24) return hours + 'h ago'
+    return Math.floor(hours / 24) + 'd ago'
+  }
+
+  function getActivityIcon(type) {
+    if (type === 'clock_in') return '🟢'
+    if (type === 'clock_out') return '🔴'
+    return '📋'
+  }
+
+  function getGreeting() {
+    const h = currentTime.getHours()
+    if (h < 12) return 'Good morning'
+    if (h < 17) return 'Good afternoon'
+    return 'Good evening'
+  }
+
+  // Collapsible section component
+  function CollapsibleCard({ title, badge, badgeColor, expanded, onToggle, children, onAction, actionLabel, actionPath }) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <button
-          onClick={handleLogout}
-          className="text-sm text-red-500 hover:text-red-700 font-medium"
+          onClick={onToggle}
+          className="w-full px-5 py-4 flex justify-between items-center hover:bg-gray-50 transition"
         >
-          Logout
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-gray-700 text-sm">{title}</span>
+            {badge > 0 && (
+              <span className={'text-white text-xs px-2 py-0.5 rounded-full font-medium ' + (badgeColor || 'bg-blue-500')}>
+                {badge}
+              </span>
+            )}
+          </div>
+          <span className={'text-gray-400 text-lg transition-transform duration-200 ' + (expanded ? 'rotate-180' : '')}>
+            ▾
+          </span>
         </button>
-      </nav>
-      <div className="max-w-lg mx-auto mt-10 px-4">
-        <div className="bg-red-50 text-red-600 rounded-2xl p-6">
-          <p className="font-medium mb-1">Error loading profile</p>
-          <p className="text-sm">{error}</p>
-        </div>
+
+        {expanded && (
+          <div className="border-t border-gray-100">
+            {children}
+            {actionLabel && actionPath && (
+              <div className="px-5 py-3 border-t border-gray-50">
+                <button
+                  onClick={() => router.push(actionPath)}
+                  className="text-blue-500 text-xs font-medium hover:text-blue-700"
+                >
+                  {actionLabel} →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+    )
+  }
+
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <p className="text-gray-500">Loading...</p>
     </div>
   )
 
-  // Show loading state
-  if (!profile) return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-        <h1 className="text-lg font-bold text-gray-800">🍽️ Restaurant System</h1>
-        <button
-          onClick={handleLogout}
-          className="text-sm text-red-500 hover:text-red-700 font-medium"
-        >
-          Logout
-        </button>
-      </nav>
-      <div className="max-w-lg mx-auto mt-10 px-4">
-        <div className="bg-white rounded-2xl shadow-md p-6 text-center">
-          <p className="text-gray-500">Loading your profile...</p>
+  // ── STAFF VIEW ──
+  if (profile?.role !== 'branch_manager') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
+          <h1 className="text-lg font-bold text-gray-800">🍽️ Restaurant System</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition"
+          >
+            Logout
+          </button>
+        </nav>
+
+        <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+
+          {/* Welcome card */}
+          <div className="bg-blue-600 rounded-2xl p-6 text-white">
+            <p className="text-blue-100 text-sm">{formatDate(currentTime)}</p>
+            <h2 className="text-2xl font-bold mt-1">
+              {getGreeting()}, {profile?.full_name?.split(' ')[0]}!
+            </h2>
+            <p className="text-blue-100 text-sm mt-1">
+              {profile?.branch?.name || 'Restaurant'}
+            </p>
+            <p className="text-white text-4xl font-mono font-bold mt-3">
+              {formatTime(currentTime)}
+            </p>
+          </div>
+
+          {/* Quick actions */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => router.push('/time-tracking')}
+              className="bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition"
+            >
+              <p className="text-3xl mb-2">⏱️</p>
+              <p className="font-semibold text-gray-800 text-sm">Clock In/Out</p>
+              <p className="text-gray-400 text-xs mt-0.5">Track your hours</p>
+            </button>
+            <button
+              onClick={() => router.push('/my-schedule')}
+              className="bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition"
+            >
+              <p className="text-3xl mb-2">📅</p>
+              <p className="font-semibold text-gray-800 text-sm">My Schedule</p>
+              <p className="text-gray-400 text-xs mt-0.5">View your shifts</p>
+            </button>
+            <button
+              onClick={() => router.push('/requests')}
+              className="bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition"
+            >
+              <p className="text-3xl mb-2">🏖️</p>
+              <p className="font-semibold text-gray-800 text-sm">Leave & Shifts</p>
+              <p className="text-gray-400 text-xs mt-0.5">Apply or swap</p>
+            </button>
+            <button
+              onClick={() => router.push('/stock')}
+              className="bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition"
+            >
+              <p className="text-3xl mb-2">📦</p>
+              <p className="font-semibold text-gray-800 text-sm">Stock Request</p>
+              <p className="text-gray-400 text-xs mt-0.5">Request reorders</p>
+            </button>
+          </div>
+
+          {/* Settings */}
+          <button
+            onClick={() => router.push('/settings')}
+            className="w-full bg-white rounded-2xl shadow-sm p-4 flex items-center gap-3 hover:shadow-md transition"
+          >
+            <span className="text-xl">⚙️</span>
+            <span className="text-gray-700 text-sm font-medium">Settings & 2FA</span>
+            <span className="ml-auto text-gray-300">→</span>
+          </button>
+
         </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  // ── MANAGER DASHBOARD ──
+  const totalPending = pendingLeave + pendingShift + pendingStock
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Nav */}
-      <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
+
+      {/* Nav with logout */}
+      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
         <h1 className="text-lg font-bold text-gray-800">🍽️ Restaurant System</h1>
         <button
           onClick={handleLogout}
-          className="text-sm text-red-500 hover:text-red-700 font-medium"
+          className="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition"
         >
           Logout
         </button>
       </nav>
 
-      {/* Content */}
-      <div className="max-w-lg mx-auto mt-10 px-4 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+
         {/* Welcome card */}
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-1">
-            Welcome, {profile.full_name} 👋
+        <div className="bg-blue-600 rounded-2xl p-6 text-white">
+          <p className="text-blue-100 text-sm">{formatDate(currentTime)}</p>
+          <h2 className="text-2xl font-bold mt-1">
+            {getGreeting()}, {profile?.full_name?.split(' ')[0]}!
           </h2>
-          <p className="text-gray-500 text-sm">
-            Role: <span className="font-medium capitalize text-blue-600">{profile.role}</span>
+          <p className="text-blue-100 text-sm mt-1">Branch Manager</p>
+          <p className="text-white text-4xl font-mono font-bold mt-3">
+            {formatTime(currentTime)}
           </p>
-          <p className="text-gray-500 text-sm">Email: {profile.email}</p>
         </div>
 
-        {/* Quick actions based on role */}
-        {profile.role === 'branch_manager' && (
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <h3 className="font-semibold text-gray-700 mb-3">Manager Actions</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={() => router.push('/schedules')}
-                className="bg-blue-50 text-blue-700 rounded-xl p-4 text-sm font-medium hover:bg-blue-100 transition">
-                📅 Schedules
-              </button>
-              <button 
-                onClick={() => router.push('/approvals')}
-                className="bg-green-50 text-green-700 rounded-xl p-4 text-sm font-medium hover:bg-green-100 transition">
-                ✅ Approvals
-              </button>
-              <button 
-                onClick={() => router.push('/stock-manager')}
-                className="bg-purple-50 text-purple-700 rounded-xl p-4 text-sm font-medium hover:bg-purple-100 transition">
-                📦 Stock
-              </button>
-              <button 
-                onClick={() => router.push('/reports')}
-                className="bg-orange-50 text-orange-700 rounded-xl p-4 text-sm font-medium hover:bg-orange-100 transition">
-                📊 Reports
-              </button>
-              <button
-                onClick={() => router.push('/time-records')}
-                className="bg-blue-50 text-blue-700 rounded-xl p-4 text-sm font-medium hover:bg-blue-100 transition">
-                ⏱️ Time Records
-              </button>              
-              <button
-                onClick={() => router.push('/settings')}
-                className="bg-gray-50 text-gray-700 rounded-xl p-4 text-sm font-medium hover:bg-gray-100 transition">
-                ⚙️ Settings
-              </button>             
-            </div>
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white rounded-2xl shadow-sm p-4 text-center">
+            <p className="text-3xl font-bold text-blue-600">{staffClockedIn.length}</p>
+            <p className="text-gray-500 text-xs mt-1">On duty now</p>
           </div>
-        )}
+          <div
+            className="bg-white rounded-2xl shadow-sm p-4 text-center cursor-pointer hover:shadow-md transition"
+            onClick={() => setShowPendingAlerts(!showPendingAlerts)}
+          >
+            <p className={'text-3xl font-bold ' + (totalPending > 0 ? 'text-orange-500' : 'text-gray-800')}>
+              {totalPending}
+            </p>
+            <p className="text-gray-500 text-xs mt-1">Pending actions</p>
+          </div>
+          <div
+            className="bg-white rounded-2xl shadow-sm p-4 text-center cursor-pointer hover:shadow-md transition"
+            onClick={() => setShowLowStock(!showLowStock)}
+          >
+            <p className={'text-3xl font-bold ' + (lowStockItems.length > 0 ? 'text-red-500' : 'text-gray-800')}>
+              {lowStockItems.length}
+            </p>
+            <p className="text-gray-500 text-xs mt-1">Low stock</p>
+          </div>
+        </div>
 
-        {profile.role === 'staff' && (
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <h3 className="font-semibold text-gray-700 mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={() => router.push('/time-tracking')}
-                className="bg-blue-50 text-blue-700 rounded-xl p-4 text-sm font-medium hover:bg-blue-100 transition">
-                🕐 Clock In/Out
-              </button>
-              <button 
-                onClick={() => router.push('/my-schedule')}
-                className="bg-green-50 text-green-700 rounded-xl p-4 text-sm font-medium hover:bg-green-100 transition">
-                📅 My Schedule
-              </button>
-              <button 
-                 onClick={() => router.push('/requests')}
-                 className="bg-purple-50 text-purple-700 rounded-xl p-4 text-sm font-medium hover:bg-purple-100 transition">
-                🔄 Shift Change
-              </button>
-              <button 
-                onClick={() => router.push('/requests')}
-                className="bg-orange-50 text-orange-700 rounded-xl p-4 text-sm font-medium hover:bg-orange-100 transition">
-                🏖️ Apply Leave
-              </button>
-              <button
-                onClick={() => router.push('/stock')}
-                className="bg-purple-50 text-purple-700 rounded-xl p-4 text-sm font-medium hover:bg-purple-100 transition">
-                📦 Stock Request
-             </button>
-            </div>
+        {/* Pending alerts — collapsible */}
+        <CollapsibleCard
+          title="⚠️ Pending Alerts"
+          badge={totalPending}
+          badgeColor="bg-orange-500"
+          expanded={showPendingAlerts}
+          onToggle={() => setShowPendingAlerts(!showPendingAlerts)}
+        >
+          <div className="px-5 py-3 space-y-2">
+            {totalPending === 0 ? (
+              <p className="text-gray-400 text-sm py-2 text-center">No pending actions</p>
+            ) : (
+              <>
+                {pendingLeave > 0 && (
+                  <button
+                    onClick={() => router.push('/approvals')}
+                    className="w-full flex justify-between items-center bg-orange-50 rounded-xl px-4 py-3 hover:bg-orange-100 transition"
+                  >
+                    <span className="text-orange-700 text-sm font-medium">🏖️ Leave Requests</span>
+                    <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingLeave}</span>
+                  </button>
+                )}
+                {pendingShift > 0 && (
+                  <button
+                    onClick={() => router.push('/approvals')}
+                    className="w-full flex justify-between items-center bg-purple-50 rounded-xl px-4 py-3 hover:bg-purple-100 transition"
+                  >
+                    <span className="text-purple-700 text-sm font-medium">🔄 Shift Change Requests</span>
+                    <span className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingShift}</span>
+                  </button>
+                )}
+                {pendingStock > 0 && (
+                  <button
+                    onClick={() => router.push('/stock-manager')}
+                    className="w-full flex justify-between items-center bg-blue-50 rounded-xl px-4 py-3 hover:bg-blue-100 transition"
+                  >
+                    <span className="text-blue-700 text-sm font-medium">📦 Stock Requests</span>
+                    <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingStock}</span>
+                  </button>
+                )}
+              </>
+            )}
           </div>
-        )}
+        </CollapsibleCard>
+
+        {/* Staff on duty — collapsible */}
+        <CollapsibleCard
+          title={'🟢 Staff On Duty (' + staffClockedIn.length + '/' + totalStaff + ')'}
+          badge={staffClockedIn.length}
+          badgeColor="bg-green-500"
+          expanded={showStaffOnDuty}
+          onToggle={() => setShowStaffOnDuty(!showStaffOnDuty)}
+          actionLabel="View all time records"
+          actionPath="/time-records"
+        >
+          {staffClockedIn.length === 0 ? (
+            <div className="px-5 py-6 text-center">
+              <p className="text-gray-400 text-sm">No staff clocked in right now</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {staffClockedIn.map(function(record) {
+                const clockInTime = new Date(record.clock_in)
+                const diffMins = Math.floor((new Date() - clockInTime) / 60000)
+                const hours = Math.floor(diffMins / 60)
+                const mins = diffMins % 60
+                return (
+                  <div key={record.id} className="px-5 py-3 flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-800 text-sm">{record.staff?.full_name}</p>
+                      <p className="text-gray-400 text-xs">
+                        Since {clockInTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <span className="bg-green-50 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                      {hours > 0 ? hours + 'h ' : ''}{mins}m
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CollapsibleCard>
+
+        {/* Weekly hours — collapsible */}
+        <CollapsibleCard
+          title="📊 This Week's Hours"
+          expanded={showWeeklyHours}
+          onToggle={() => setShowWeeklyHours(!showWeeklyHours)}
+          actionLabel="Full report"
+          actionPath="/reports"
+        >
+          {weeklyHours.length === 0 ? (
+            <div className="px-5 py-6 text-center">
+              <p className="text-gray-400 text-sm">No hours recorded this week</p>
+            </div>
+          ) : (
+            <div className="px-5 py-4 space-y-3">
+              {weeklyHours.map(function(s) {
+                const maxHours = Math.max(...weeklyHours.map(x => parseFloat(x.hours)))
+                const pct = maxHours > 0 ? (parseFloat(s.hours) / maxHours) * 100 : 0
+                return (
+                  <div key={s.name}>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-gray-700 text-sm">{s.name}</p>
+                      <p className="text-gray-500 text-xs font-medium">{s.hours}h</p>
+                    </div>
+                    <div className="bg-gray-100 rounded-full h-2">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full"
+                        style={{ width: pct + '%' }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CollapsibleCard>
+
+        {/* Low stock — collapsible */}
+        <CollapsibleCard
+          title="⚠️ Low Stock Alerts"
+          badge={lowStockItems.length}
+          badgeColor="bg-red-500"
+          expanded={showLowStock}
+          onToggle={() => setShowLowStock(!showLowStock)}
+          actionLabel="Manage stock"
+          actionPath="/stock-manager"
+        >
+          {lowStockItems.length === 0 ? (
+            <div className="px-5 py-6 text-center">
+              <p className="text-gray-400 text-sm">All stock levels are OK</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {lowStockItems.map(function(item) {
+                const isOut = item.current_quantity <= 0
+                return (
+                  <div key={item.id} className="px-5 py-3 flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-800 text-sm">{item.name}</p>
+                      <p className="text-gray-400 text-xs">{item.category}</p>
+                    </div>
+                    <span className={'text-xs font-semibold px-2 py-1 rounded-full ' +
+                      (isOut ? 'bg-red-100 text-red-700' : 'bg-yellow-50 text-yellow-700')}>
+                      {isOut ? 'Out of stock' : item.current_quantity + ' ' + item.unit + ' left'}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CollapsibleCard>
+
+        {/* Recent activity — collapsible */}
+        <CollapsibleCard
+          title="🕐 Recent Activity"
+          expanded={showRecentActivity}
+          onToggle={() => setShowRecentActivity(!showRecentActivity)}
+        >
+          {recentActivity.length === 0 ? (
+            <div className="px-5 py-6 text-center">
+              <p className="text-gray-400 text-sm">No recent activity</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {recentActivity.map(function(activity, index) {
+                return (
+                  <div key={index} className="px-5 py-3 flex items-center gap-3">
+                    <span className="text-lg">{getActivityIcon(activity.type)}</span>
+                    <p className="text-gray-600 text-sm flex-1">{activity.text}</p>
+                    <p className="text-gray-300 text-xs whitespace-nowrap">
+                      {formatRelativeTime(activity.time)}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CollapsibleCard>
+
+        {/* Quick navigation */}
+        <div className="bg-white rounded-2xl shadow-sm p-5">
+          <h3 className="font-semibold text-gray-700 text-sm mb-3">Quick Navigation</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { icon: '📅', label: 'Schedules', path: '/schedules' },
+              { icon: '⏱️', label: 'Time Records', path: '/time-records' },
+              { icon: '✅', label: 'Approvals', path: '/approvals' },
+              { icon: '📦', label: 'Stock', path: '/stock-manager' },
+              { icon: '📊', label: 'Reports', path: '/reports' },
+              { icon: '⚙️', label: 'Settings', path: '/settings' },
+            ].map(function(item) {
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => router.push(item.path)}
+                  className="flex flex-col items-center gap-1 bg-gray-50 rounded-xl p-3 hover:bg-blue-50 transition"
+                >
+                  <span className="text-2xl">{item.icon}</span>
+                  <span className="text-xs font-medium text-gray-600">{item.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
       </div>
     </div>
   )

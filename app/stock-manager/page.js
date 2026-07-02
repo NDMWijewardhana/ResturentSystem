@@ -19,8 +19,7 @@ export default function StockManagerPage() {
   const [success, setSuccess] = useState('')
   const [itemForm, setItemForm] = useState({
     name: '', category: '', unit: 'units',
-    min_quantity: '', current_quantity: '', branch_id: ''
-  })
+    min_quantity: '', current_quantity: ''})
   const router = useRouter()
   const supabase = createClient()
   const [branches, setBranches] = useState([])
@@ -77,15 +76,11 @@ async function loadData() {
   setRequests(requestsData || [])
 
   // Load stock items with branch filter
-  let itemsQuery = supabase
-    .from('stock_items')
-    .select('*, branch:branches(name)')
-    .order('category')
-    .order('name')
-
-  if (selectedBranch !== 'all') {
-    itemsQuery = itemsQuery.eq('branch_id', selectedBranch)
-  }
+  const itemsQuery = supabase
+  .from('stock_items')
+  .select('*')
+  .order('category')
+  .order('name')
 
   const { data: itemsData } = await itemsQuery
   setStockItems(itemsData || [])
@@ -166,8 +161,7 @@ async function loadData() {
       category: itemForm.category,
       unit: itemForm.unit,
       min_quantity: parseInt(itemForm.min_quantity),
-      current_quantity: parseInt(itemForm.current_quantity),
-      branch_id: itemForm.branch_id
+      current_quantity: parseInt(itemForm.current_quantity)
     }
 
     if (editingItem) {
@@ -455,10 +449,7 @@ async function loadData() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <p className="font-medium text-gray-800 text-sm">{item.name}</p>
-                      <p className="text-gray-400 text-xs">
-                        {item.category}
-                        {item.branch?.name && ' · ' + item.branch.name}
-                      </p>
+                      <p className="text-gray-400 text-xs"> {item.category}</p>
                     </div>
                     <span className={'text-xs font-medium px-2 py-1 rounded-full ' + getStockLevelColor(level)}>
                       {level === 'out' ? 'Out of stock' : level === 'critical' ? 'Critical' : level === 'low' ? 'Low' : 'OK'}
@@ -540,20 +531,7 @@ async function loadData() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. Meat, Vegetables, Supplies"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-                <select
-                    value={itemForm.branch_id}
-                    onChange={e => setItemForm({ ...itemForm, branch_id: e.target.value })}
-                    required
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Select branch...</option>
-                    {branches.map(function(b) {
-                    return <option key={b.id} value={b.id}>{b.name}</option>
-                    })}
-                </select>
-             </div>
+              </div>              
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>

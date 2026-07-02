@@ -114,7 +114,7 @@ export default function Setup2FA() {
     setLoading(false)
   }
 
-  return (
+  return (    
     <div className="min-h-screen bg-gray-50">
       {/* Nav */}
       <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
@@ -129,8 +129,16 @@ export default function Setup2FA() {
 
       <div className="max-w-sm mx-auto mt-10 px-4">
         <div className="bg-white rounded-2xl shadow-md p-8">
-
           {/* STEP: Start */}
+          {/* Mandatory warning */}
+          {required2FA && twoFAStep !== 'done' && (
+            <div className="bg-red-50 rounded-xl p-4 mb-6 text-center">
+              <p className="text-red-700 text-sm font-semibold">🔒 2FA is required</p>
+              <p className="text-red-500 text-xs mt-1">
+                You must set up two-factor authentication before accessing the system.
+              </p>
+            </div>
+          )}
           {step === 'start' && (
             <div className="text-center">
               <div className="text-5xl mb-4">🔐</div>
