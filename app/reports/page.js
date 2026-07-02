@@ -60,20 +60,20 @@ export default function ReportsPage() {
 
     const { data } = await supabase
       .from('time_records')
-      .select('*, staff:profiles!time_records_staff_id_fkey(full_name, branch:branches(name))')
+      .select('*, staff:profiles!time_records_staff_id_fkey(full_name, hourly_rate, branch:branches(name))')
       .gte('clock_in', startDate)
       .lte('clock_in', endDate + 'T23:59:59')
       .not('clock_out', 'is', null)
 
     if (!data) return
 
-    // Build summary
     const summaryMap = {}
     data.forEach(function(r) {
       const name = r.staff?.full_name || 'Unknown'
       const branch = r.staff?.branch?.name || 'Main'
+      const hourlyRate = r.staff?.hourly_rate || 0
       if (!summaryMap[name]) {
-        summaryMap[name] = { name, branch, totalMinutes: 0, shifts: 0 }
+        summaryMap[name] = { name, branch, totalMinutes: 0, shifts: 0, hourlyRate }
       }
       summaryMap[name].totalMinutes += r.total_minutes || 0
       summaryMap[name].shifts += 1
@@ -247,25 +247,51 @@ export default function ReportsPage() {
               <div className="px-5 py-3 bg-blue-50 flex justify-between text-xs text-blue-700 font-medium">
                 <span>{preview.length} staff members</span>
                 <span>
-                  {formatHours(preview.reduce(function(sum, s) { return sum + s.totalMinutes }, 0))} total
+                  Total: {formatHours(preview.reduce(function(sum, s) { return sum + s.totalMinutes }, 0))}
                 </span>
               </div>
-
               <div className="divide-y divide-gray-50">
                 {preview.map(function(s) {
+                  const hours = s.totalMinutes / 60
+                  const pay = hours * s.hourlyRate
                   return (
-                    <div key={s.name} className="px-5 py-3 flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-gray-800 text-sm">{s.name}</p>
-                        <p className="text-gray-400 text-xs">{s.branch} · {s.shifts} shifts</p>
+                    <div key={s.name} className="px-5 py-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-gray-800 text-sm">{s.name}</p>
+                          <p className="text-gray-400 text-xs">{s.branch} · {s.shifts} shifts</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-blue-700 text-sm font-semibold">
+                            {formatHours(s.totalMinutes)}
+                          </p>
+                          {s.hourlyRate > 0 && (
+                            <p className="text-green-600 text-xs font-medium">
+                              € {pay.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
-                        {formatHours(s.totalMinutes)}
-                      </span>
                     </div>
                   )
                 })}
               </div>
+              {/* Grand total */}
+              {preview.length > 0 && (
+                <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                  <span className="text-gray-600 text-sm font-semibold">Grand Total</span>
+                  <div className="text-right">
+                    <p className="text-blue-700 text-sm font-semibold">
+                      {formatHours(preview.reduce(function(sum, s) { return sum + s.totalMinutes }, 0))}
+                    </p>
+                    <p className="text-green-600 text-xs font-medium">
+                      € {preview.reduce(function(sum, s) {
+                        return sum + (s.totalMinutes / 60) * s.hourlyRate
+                      }, 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

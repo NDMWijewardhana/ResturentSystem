@@ -38,7 +38,7 @@ export default function SettingsPage() {
   const [staffError, setStaffError] = useState('')
   const [staffSuccess, setStaffSuccess] = useState('')
   const [staffForm, setStaffForm] = useState({
-    full_name: '', email: '', password: '', role: 'staff', branch_id: '', phone: ''
+    full_name: '', email: '', password: '', role: 'staff', branch_id: '', phone: '', hourly_rate: ''
   })
   const [branchForm, setBranchForm] = useState({ name: '', address: '' })
 
@@ -46,6 +46,7 @@ export default function SettingsPage() {
   const router = useRouter()
   const supabase = createClient()
   const [required2FA, setRequired2FA] = useState(false)
+  const [currency, setCurrency] = useState('EUR')
 
   useEffect(() => {
     loadAll()
@@ -80,6 +81,7 @@ export default function SettingsPage() {
           if (s.key === 'restaurant_lng') setLng(s.value)
           if (s.key === 'clock_radius_metres') setRadius(s.value)
           if (s.key === 'override_pin') setPin(s.value)
+          if (s.key === 'currency') setCurrency(s.value)  
         })
       }
 
@@ -154,7 +156,8 @@ export default function SettingsPage() {
       { key: 'restaurant_lat', value: lat },
       { key: 'restaurant_lng', value: lng },
       { key: 'clock_radius_metres', value: radius },
-      { key: 'override_pin', value: pin }
+      { key: 'override_pin', value: pin },
+      { key: 'currency', value: currency }
     ]
 
     for (const update of updates) {
@@ -284,8 +287,13 @@ export default function SettingsPage() {
   function openEditStaffForm(member) {
     setEditingStaff(member)
     setStaffForm({
-      full_name: member.full_name, email: member.email, password: '',
-      role: member.role, branch_id: member.branch_id || '', phone: member.phone || ''
+      full_name: member.full_name, 
+      email: member.email, 
+      password: '',
+      role: member.role, 
+      branch_id: member.branch_id || '', 
+      phone: member.phone || '',
+      hourly_rate: member.hourly_rate || ''
     })
     setShowStaffForm(true)
     setStaffError('')
@@ -332,7 +340,8 @@ export default function SettingsPage() {
           full_name: staffForm.full_name,
           role: staffForm.role,
           branch_id: staffForm.branch_id,
-          phone: staffForm.phone
+          phone: staffForm.phone,
+          hourly_rate: parseFloat(staffForm.hourly_rate) || 0
         }
       })
     })
@@ -550,7 +559,24 @@ export default function SettingsPage() {
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
-
+                  <div className="border-t border-gray-100 pt-4">
+                    <h3 className="font-bold text-gray-800 mb-1">💰 Currency</h3>
+                    <p className="text-gray-500 text-sm mb-3">
+                      Used in payroll reports and calculations.
+                    </p>
+                    <select
+                      value={currency}
+                      onChange={e => setCurrency(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="EUR">EUR — Euro (€)</option>
+                      <option value="USD">USD — US Dollar ($)</option>
+                      <option value="GBP">GBP — British Pound (£)</option>
+                      <option value="LKR">LKR — Sri Lankan Rupee (₨)</option>
+                      <option value="INR">INR — Indian Rupee (₹)</option>
+                      <option value="AUD">AUD — Australian Dollar (A$)</option>
+                    </select>
+                  </div>
                   <button
                     type="submit" disabled={saving || !lat || !lng}
                     className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50"
@@ -862,7 +888,28 @@ export default function SettingsPage() {
                   placeholder="+358..."
                 />
               </div>
-
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hourly Rate (optional)
+                </label>
+                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                  <span className="bg-gray-50 text-gray-500 text-sm px-3 py-3 border-r border-gray-300">
+                    €
+                  </span>
+                  <input
+                    type="number"
+                    value={staffForm.hourly_rate}
+                    onChange={e => setStaffForm({ ...staffForm, hourly_rate: e.target.value })}
+                    min="0"
+                    step="0.01"
+                    className="flex-1 px-4 py-3 text-sm focus:outline-none"
+                    placeholder="0.00"
+                  />
+                  <span className="bg-gray-50 text-gray-500 text-sm px-3 py-3 border-l border-gray-300">
+                    /hr
+                  </span>
+                </div>
+              </div>
               <div className="flex gap-3 pt-2">
                 <button
                   type="button" onClick={() => setShowStaffForm(false)}
