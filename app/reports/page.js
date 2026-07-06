@@ -22,10 +22,12 @@ export default function ReportsPage() {
   const router = useRouter()
   const supabase = createClient()
   const [fileName, setFileName] = useState('staff-report')
+  const [branches, setBranches] = useState([])
+  const [selectedBranch, setSelectedBranch] = useState('all')
 
   useEffect(() => {
     loadProfile()
-  }, [])
+  }, [selectedMonth, profile, selectedBranch])
 
   useEffect(() => {
     if (profile) loadPreview()
@@ -35,6 +37,12 @@ export default function ReportsPage() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/'); return }
+    const { data: branchData } = await supabase
+          .from('branches')
+          .select('*')
+          .order('name')
+
+    setBranches(branchData || [])
 
     const { data: profileData } = await supabase
       .from('profiles')
@@ -58,17 +66,25 @@ export default function ReportsPage() {
     const lastDay = new Date(year, month, 0).getDate()
     const endDate = `${year}-${month}-${lastDay}`
 
-    const { data } = await supabase
+    let query = supabase
       .from('time_records')
-      .select('*, staff:profiles!time_records_staff_id_fkey(full_name, hourly_rate, branch:branches(name))')
+      .select('*, staff:profiles!time_records_staff_id_fkey(full_name, hourly_rate, branch_id, branch:branches(name))')
       .gte('clock_in', startDate)
       .lte('clock_in', endDate + 'T23:59:59')
       .not('clock_out', 'is', null)
 
+    if (selectedBranch !== 'all') {
+      query = query.eq('staff.branch_id', selectedBranch)
+    }
+
+    const { data } = await query
     if (!data) return
 
     const summaryMap = {}
     data.forEach(function(r) {
+      // Filter by branch if selected
+      if (selectedBranch !== 'all' && r.staff?.branch_id !== selectedBranch) return
+
       const name = r.staff?.full_name || 'Unknown'
       const branch = r.staff?.branch?.name || 'Main'
       const hourlyRate = r.staff?.hourly_rate || 0
@@ -87,7 +103,7 @@ export default function ReportsPage() {
       setError('Please enter an email address')
       return
     }
-    body: JSON.stringify({ month: selectedMonth, email: emailTo, fileName: fileName || 'staff-report' })
+    body: JSON.stringify({ month: selectedMonth, email: emailTo, fileName: fileName || 'staff-report',branchId: selectedBranch })
     setSending(true)
     setError('')
     setSuccess('')
@@ -122,7 +138,7 @@ export default function ReportsPage() {
   }
 
   async function handleDownload() {
-  body: JSON.stringify({ month: selectedMonth, fileName: fileName || 'staff-report' })  
+  body: JSON.stringify({ month: selectedMonth, fileName: fileName || 'staff-report',branchId: selectedBranch })  
   setDownloading(true)
   setError('')
 
@@ -228,7 +244,41 @@ export default function ReportsPage() {
             className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
+        {/* Branch filter */}
+        {branches.length > 1 && (
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <h3 className="font-semibold text-gray-700 text-sm mb-3">Filter by Branch</h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedBranch('all')}
+                className={
+                  'px-4 py-2 rounded-lg text-xs font-medium border transition ' +
+                  (selectedBranch === 'all'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400')
+                }
+              >
+                All Branches
+              </button>
+              {branches.map(function(b) {
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBranch(b.id)}
+                    className={
+                      'px-4 py-2 rounded-lg text-xs font-medium border transition ' +
+                      (selectedBranch === b.id
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400')
+                    }
+                  >
+                    {b.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
         {/* Preview */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100">

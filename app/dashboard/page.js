@@ -293,7 +293,7 @@ async function loadProfile() {
               {getGreeting()}, {profile?.full_name?.split(' ')[0]}!
             </h2>
             <p className="text-blue-100 text-sm mt-1">
-              {profile?.branch?.name || 'Restaurant'}
+              🏢 {profile?.branch?.name || 'Restaurant'}
             </p>
             <p className="text-white text-4xl font-mono font-bold mt-3">
               {formatTime(currentTime)}
@@ -353,7 +353,18 @@ async function loadProfile() {
 
   // ── MANAGER DASHBOARD ──
   const totalPending = pendingLeave + pendingShift + pendingStock
-
+  
+  function getBranchSummary() {
+    const acc = {}
+    staffClockedIn.forEach(function(record) {
+      const branchName = record.staff?.branch?.name || 'Main Branch'
+      if (!acc[branchName]) acc[branchName] = 0
+      acc[branchName]++
+    })
+    return Object.entries(acc).map(function([branch, count]) {
+      return { branch, count }
+    })
+  }
   return (
     <div className="min-h-screen bg-gray-50">
 
@@ -589,6 +600,27 @@ async function loadProfile() {
             </div>
           )}
         </CollapsibleCard>
+
+        {/* Branch overview - shows all branches */}
+        <div className="bg-white rounded-2xl shadow-sm p-5">
+          <h3 className="font-semibold text-gray-700 text-sm mb-3">🏢 Branch Overview</h3>
+          <div className="space-y-2">
+            {staffClockedIn.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-2">No staff on duty</p>
+            ) : (
+              getBranchSummary().map(function(item) {
+                return (
+                  <div key={item.branch} className="flex justify-between items-center">
+                    <span className="text-gray-700 text-sm">{item.branch}</span>
+                    <span className="bg-green-50 text-green-700 text-xs font-medium px-3 py-1 rounded-full">
+                      {item.count} on duty
+                    </span>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
 
         {/* Quick navigation */}
         <div className="bg-white rounded-2xl shadow-sm p-5">

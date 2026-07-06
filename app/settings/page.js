@@ -30,7 +30,6 @@ export default function SettingsPage() {
 
   // Staff & Branches
   const [staff, setStaff] = useState([])
-  const [branches, setBranches] = useState([])
   const [showStaffForm, setShowStaffForm] = useState(false)
   const [showBranchForm, setShowBranchForm] = useState(false)
   const [editingStaff, setEditingStaff] = useState(null)
@@ -47,7 +46,12 @@ export default function SettingsPage() {
   const supabase = createClient()
   const [required2FA, setRequired2FA] = useState(false)
   const [currency, setCurrency] = useState('EUR')
-
+  const [branches, setBranches] = useState([])
+  const [selectedBranchId, setSelectedBranchId] = useState('')
+  const [branchSettings, setBranchSettings] = useState({
+    name: '', address: '', latitude: '', longitude: '',
+    radius_metres: '100', override_pin: '1234'
+  })
   useEffect(() => {
     loadAll()
   }, [])
@@ -74,17 +78,23 @@ export default function SettingsPage() {
 
     if (profileData?.role === 'branch_manager') {
       // Location settings
-      const { data } = await supabase.from('settings').select('key, value')
-      if (data) {
-        data.forEach(function(s) {
-          if (s.key === 'restaurant_lat') setLat(s.value)
-          if (s.key === 'restaurant_lng') setLng(s.value)
-          if (s.key === 'clock_radius_metres') setRadius(s.value)
-          if (s.key === 'override_pin') setPin(s.value)
-          if (s.key === 'currency') setCurrency(s.value)  
-        })
-      }
+      const { data: branchData } = await supabase
+                                        .from('branches')
+                                        .select('*')
+                                        .order('name')
 
+    if (branchData && branchData.length > 0) {
+      setBranches(branchData)
+      setSelectedBranchId(branchData[0].id)
+      setBranchSettings({
+        name: branchData[0].name || '',
+        address: branchData[0].address || '',
+        latitude: branchData[0].latitude || '',
+        longitude: branchData[0].longitude || '',
+        radius_metres: String(branchData[0].radius_metres || 100),
+        override_pin: branchData[0].override_pin || '1234'
+      })
+    }
       // Staff & branches
       await loadStaffData()
     }
@@ -97,6 +107,22 @@ export default function SettingsPage() {
     }
 
     setLoading(false)
+  }
+
+  function handleSelectBranch(branchId) {
+  const branch = branches.find(b => b.id === branchId)
+    if (!branch) return
+    setSelectedBranchId(branchId)
+    setBranchSettings({
+      name: branch.name || '',
+      address: branch.address || '',
+      latitude: branch.latitude || '',
+      longitude: branch.longitude || '',
+      radius_metres: String(branch.radius_metres || 100),
+      override_pin: branch.override_pin || '1234'
+    })
+    setLocationSuccess('')
+    setLocationError('')
   }
 
   async function loadStaffData() {
@@ -133,8 +159,11 @@ export default function SettingsPage() {
     }
     navigator.geolocation.getCurrentPosition(
       function(position) {
-        setLat(position.coords.latitude.toFixed(6))
-        setLng(position.coords.longitude.toFixed(6))
+        setBranchSettings({
+          ...branchSettings,
+          latitude: position.coords.latitude.toFixed(6),
+          longitude: position.coords.longitude.toFixed(6)
+        })
         setDetecting(false)
         setLocationSuccess('Location detected! Save to confirm.')
         setTimeout(function() { setLocationSuccess('') }, 3000)
@@ -152,28 +181,31 @@ export default function SettingsPage() {
     setSaving(true)
     setLocationError('')
 
-    const updates = [
-      { key: 'restaurant_lat', value: lat },
-      { key: 'restaurant_lng', value: lng },
-      { key: 'clock_radius_metres', value: radius },
-      { key: 'override_pin', value: pin },
-      { key: 'currency', value: currency }
-    ]
+    const { error } = await supabase
+      .from('branches')
+      .update({
+        address: branchSettings.address,
+        latitude: parseFloat(branchSettings.latitude) || null,
+        longitude: parseFloat(branchSettings.longitude) || null,
+        radius_metres: parseInt(branchSettings.radius_metres) || 100,
+        override_pin: branchSettings.override_pin
+      })
+      .eq('id', selectedBranchId)
 
-    for (const update of updates) {
-      const { error } = await supabase
-        .from('settings')
-        .update({ value: update.value })
-        .eq('key', update.key)
-
-      if (error) {
-        setLocationError('Error saving: ' + error.message)
-        setSaving(false)
-        return
-      }
+    if (error) {
+      setLocationError('Error saving: ' + error.message)
+      setSaving(false)
+      return
     }
 
-    setLocationSuccess('Settings saved successfully!')
+    // Refresh branches list
+    const { data: branchData } = await supabase
+      .from('branches')
+      .select('*')
+      .order('name')
+
+    setBranches(branchData || [])
+    setLocationSuccess('Branch settings saved!')
     setTimeout(function() { setLocationSuccess('') }, 3000)
     setSaving(false)
   }
@@ -468,8 +500,6 @@ export default function SettingsPage() {
             </button>
           )}
         </div>
-
-        {/* ── LOCATION TAB ── */}
         {activeTab === 'location' && (
           <div className="space-y-4">
             {profile?.role !== 'branch_manager' ? (
@@ -480,115 +510,229 @@ export default function SettingsPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h2 className="font-bold text-gray-800 mb-1">📍 Restaurant Location</h2>
-                <p className="text-gray-500 text-sm mb-6">
-                  Stand inside the restaurant and tap Detect My Location.
-                </p>
+              <div className="space-y-4">
 
-                {locationSuccess && (
-                  <div className="bg-green-50 text-green-700 rounded-xl px-4 py-3 text-sm mb-4">
-                    ✅ {locationSuccess}
+                {/* Branch selector */}
+                <div className="bg-white rounded-2xl shadow-sm p-5">
+                  <h3 className="font-semibold text-gray-700 text-sm mb-3">
+                    🏢 Select Branch to Configure
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {branches.map(function(b) {
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => handleSelectBranch(b.id)}
+                          className={
+                            'px-4 py-2 rounded-xl text-sm font-medium border transition ' +
+                            (selectedBranchId === b.id
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400')
+                          }
+                        >
+                          {b.name}
+                          {b.latitude && (
+                            <span className="ml-1 text-xs opacity-70">📍</span>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
-                )}
-                {locationError && (
-                  <div className="bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm mb-4">
-                    {locationError}
-                  </div>
-                )}
+                </div>
 
-                <button
-                  type="button"
-                  onClick={detectLocation}
-                  disabled={detecting}
-                  className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition disabled:opacity-50 mb-6"
-                >
-                  {detecting ? '📡 Detecting...' : '📍 Detect My Location'}
-                </button>
+                {/* Branch location form */}
+                <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <h2 className="font-bold text-gray-800 mb-1">
+                    📍 {branchSettings.name} — Location Settings
+                  </h2>
+                  <p className="text-gray-500 text-sm mb-6">
+                    Stand inside this branch and tap Detect My Location.
+                    Staff assigned to this branch must be within the radius to clock in.
+                  </p>
 
-                <form onSubmit={handleSaveLocation} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-                      <input
-                        type="text" value={lat} onChange={e => setLat(e.target.value)} required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                        placeholder="e.g. 60.169856"
-                      />
+                  {locationSuccess && (
+                    <div className="bg-green-50 text-green-700 rounded-xl px-4 py-3 text-sm mb-4">
+                      ✅ {locationSuccess}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-                      <input
-                        type="text" value={lng} onChange={e => setLng(e.target.value)} required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                        placeholder="e.g. 24.938379"
-                      />
+                  )}
+                  {locationError && (
+                    <div className="bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm mb-4">
+                      {locationError}
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Allowed radius (metres)
-                    </label>
-                    <div className="flex gap-3">
-                      {['50', '100', '200'].map(function(r) {
-                        return (
-                          <button key={r} type="button" onClick={() => setRadius(r)} className={getRadiusButtonClass(r)}>
-                            {r}m
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
+                  )}
 
                   <button
                     type="button"
-                    onClick={() => window.open('https://www.google.com/maps?q=' + lat + ',' + lng)}
-                    className="w-full bg-gray-50 text-blue-500 py-3 rounded-xl text-sm hover:bg-gray-100 transition"
+                    onClick={detectLocation}
+                    disabled={detecting}
+                    className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition disabled:opacity-50 mb-6"
                   >
-                    Verify on Google Maps
+                    {detecting ? '📡 Detecting...' : '📍 Detect My Location'}
                   </button>
 
-                  <div className="border-t border-gray-100 pt-4">
-                    <h3 className="font-bold text-gray-800 mb-1">🔓 Override PIN</h3>
-                    <p className="text-gray-500 text-sm mb-3">
-                      Staff enter this PIN when GPS fails indoors.
-                    </p>
-                    <input
-                      type="text" value={pin} onChange={e => setPin(e.target.value)} maxLength={6}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="border-t border-gray-100 pt-4">
-                    <h3 className="font-bold text-gray-800 mb-1">💰 Currency</h3>
-                    <p className="text-gray-500 text-sm mb-3">
-                      Used in payroll reports and calculations.
-                    </p>
-                    <select
-                      value={currency}
-                      onChange={e => setCurrency(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <form onSubmit={handleSaveLocation} className="space-y-4">
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Branch Address
+                      </label>
+                      <input
+                        type="text"
+                        value={branchSettings.address}
+                        onChange={e => setBranchSettings({ ...branchSettings, address: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="e.g. 123 Main Street, Helsinki"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Latitude
+                        </label>
+                        <input
+                          type="text"
+                          value={branchSettings.latitude}
+                          onChange={e => setBranchSettings({ ...branchSettings, latitude: e.target.value })}
+                          className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                          placeholder="e.g. 60.169856"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Longitude
+                        </label>
+                        <input
+                          type="text"
+                          value={branchSettings.longitude}
+                          onChange={e => setBranchSettings({ ...branchSettings, longitude: e.target.value })}
+                          className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                          placeholder="e.g. 24.938379"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Allowed radius (metres)
+                      </label>
+                      <div className="flex gap-3">
+                        {['50', '100', '200'].map(function(r) {
+                          return (
+                            <button
+                              key={r}
+                              type="button"
+                              onClick={() => setBranchSettings({ ...branchSettings, radius_metres: r })}
+                              className={
+                                'flex-1 py-2 rounded-lg text-sm font-medium border transition ' +
+                                (branchSettings.radius_metres === r
+                                  ? 'bg-blue-600 text-white border-blue-600'
+                                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400')
+                              }
+                            >
+                              {r}m
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => window.open(
+                        'https://www.google.com/maps?q=' +
+                        branchSettings.latitude + ',' +
+                        branchSettings.longitude
+                      )}
+                      disabled={!branchSettings.latitude || !branchSettings.longitude}
+                      className="w-full bg-gray-50 text-blue-500 py-3 rounded-xl text-sm hover:bg-gray-100 transition disabled:opacity-30"
                     >
-                      <option value="EUR">EUR — Euro (€)</option>
-                      <option value="USD">USD — US Dollar ($)</option>
-                      <option value="GBP">GBP — British Pound (£)</option>
-                      <option value="LKR">LKR — Sri Lankan Rupee (₨)</option>
-                      <option value="INR">INR — Indian Rupee (₹)</option>
-                      <option value="AUD">AUD — Australian Dollar (A$)</option>
-                    </select>
+                      Verify on Google Maps
+                    </button>
+
+                    <div className="border-t border-gray-100 pt-4">
+                      <h3 className="font-bold text-gray-800 mb-1">🔓 Override PIN</h3>
+                      <p className="text-gray-500 text-sm mb-3">
+                        Staff at this branch use this PIN when GPS fails indoors.
+                      </p>
+                      <input
+                        type="text"
+                        value={branchSettings.override_pin}
+                        onChange={e => setBranchSettings({ ...branchSettings, override_pin: e.target.value })}
+                        maxLength={6}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter 4-6 digit PIN"
+                      />
+                    </div>
+
+                    {/* Currency */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <h3 className="font-bold text-gray-800 mb-1">💰 Currency</h3>
+                      <p className="text-gray-500 text-sm mb-3">
+                        Used in payroll reports and calculations.
+                      </p>
+                      <select
+                        value={currency}
+                        onChange={e => setCurrency(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="EUR">EUR — Euro (€)</option>
+                        <option value="USD">USD — US Dollar ($)</option>
+                        <option value="GBP">GBP — British Pound (£)</option>
+                        <option value="LKR">LKR — Sri Lankan Rupee (₨)</option>
+                        <option value="INR">INR — Indian Rupee (₹)</option>
+                        <option value="AUD">AUD — Australian Dollar (A$)</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                    >
+                      {saving ? 'Saving...' : 'Save Branch Settings'}
+                    </button>
+
+                  </form>
+                </div>
+
+                {/* All branches overview */}
+                <div className="bg-white rounded-2xl shadow-sm p-5">
+                  <h3 className="font-semibold text-gray-700 text-sm mb-3">
+                    All Branches Overview
+                  </h3>
+                  <div className="space-y-3">
+                    {branches.map(function(b) {
+                      return (
+                        <div key={b.id} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
+                          <div>
+                            <p className="font-medium text-gray-800 text-sm">{b.name}</p>
+                            <p className="text-gray-400 text-xs">
+                              {b.address || 'No address set'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            {b.latitude && b.longitude ? (
+                              <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
+                                📍 GPS set
+                              </span>
+                            ) : (
+                              <span className="bg-red-50 text-red-600 text-xs px-2 py-1 rounded-full font-medium">
+                                ⚠️ No GPS
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <button
-                    type="submit" disabled={saving || !lat || !lng}
-                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50"
-                  >
-                    {saving ? 'Saving...' : 'Save Settings'}
-                  </button>
-                </form>
+                </div>
+
               </div>
             )}
           </div>
-        )}
-
+        )}         
         {/* ── 2FA TAB ── */}
         {activeTab === '2fa' && (
           <div className="bg-white rounded-2xl shadow-sm p-8">

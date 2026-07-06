@@ -49,21 +49,20 @@ export default function TimeTracking() {
 
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, branch:branches(name, latitude, longitude, radius_metres, override_pin)')
       .eq('id', user.id)
       .single()
 
     setProfile(profileData)
 
-    // Load restaurant settings
-    const { data: settingsData } = await supabase
-      .from('settings')
-      .select('key, value')
-
-    if (settingsData) {
-      const s = {}
-      settingsData.forEach(row => { s[row.key] = row.value })
-      setRestaurantSettings(s)
+    // Use branch GPS settings instead of global settings
+    if (profileData?.branch) {
+      setRestaurantSettings({
+        restaurant_lat: profileData.branch.latitude,
+        restaurant_lng: profileData.branch.longitude,
+        clock_radius_metres: profileData.branch.radius_metres || 100,
+        override_pin: profileData.branch.override_pin || '1234'
+      })
     }
 
     // Check active clock in
@@ -105,13 +104,14 @@ export default function TimeTracking() {
 
   async function checkLocation() {
     return new Promise((resolve) => {
-      // If restaurant location not set up yet, allow clock in
-      if (
-        !restaurantSettings ||
-        restaurantSettings.restaurant_lat === '0' ||
-        restaurantSettings.restaurant_lng === '0'
-      ) {
-        resolve({ allowed: true, message: 'Location not configured' })
+      const branchLat = restaurantSettings?.restaurant_lat
+      const branchLng = restaurantSettings?.restaurant_lng
+
+      // If branch GPS not set up yet allow clock in
+      if (!branchLat || !branchLng ||
+          branchLat === '0' || branchLng === '0' ||
+          branchLat === null || branchLng === null) {
+        resolve({ allowed: true, message: 'Location not configured for this branch' })
         return
       }
 
@@ -124,9 +124,9 @@ export default function TimeTracking() {
         (position) => {
           const staffLat = position.coords.latitude
           const staffLng = position.coords.longitude
-          const restLat = parseFloat(restaurantSettings.restaurant_lat)
-          const restLng = parseFloat(restaurantSettings.restaurant_lng)
-          const allowedRadius = parseFloat(restaurantSettings.clock_radius_metres || '100')
+          const restLat = parseFloat(branchLat)
+          const restLng = parseFloat(branchLng)
+          const allowedRadius = parseFloat(restaurantSettings.clock_radius_metres || 100)
 
           const distance = getDistanceMetres(staffLat, staffLng, restLat, restLng)
           const distanceRounded = Math.round(distance)
@@ -134,12 +134,12 @@ export default function TimeTracking() {
           if (distance <= allowedRadius) {
             resolve({
               allowed: true,
-              message: 'You are ' + distanceRounded + 'm from the restaurant'
+              message: 'You are ' + distanceRounded + 'm from ' + (profile?.branch?.name || 'the restaurant')
             })
           } else {
             resolve({
               allowed: false,
-              message: 'You are ' + distanceRounded + 'm away. Must be within ' + allowedRadius + 'm to clock in.'
+              message: 'You are ' + distanceRounded + 'm away. Must be within ' + allowedRadius + 'm of ' + (profile?.branch?.name || 'your branch') + '.'
             })
           }
         },
@@ -247,17 +247,10 @@ export default function TimeTracking() {
   }
 
   // Manager override using PIN
-  async function handleOverride(e) {
+async function handleOverride(e) {
     e.preventDefault()
 
-    // Get the manager override PIN from settings
-    const { data } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('key', 'override_pin')
-      .single()
-
-    const correctPin = data?.value || '0000'
+    const correctPin = profile?.branch?.override_pin || '1234'
 
     if (overridePin !== correctPin) {
       alert('Incorrect PIN. Ask your branch manager for the override PIN.')
@@ -274,7 +267,7 @@ export default function TimeTracking() {
     } else {
       await performClockIn()
     }
-  }
+}
 
   function formatDateTime(isoStr) {
     return new Date(isoStr).toLocaleString('en-GB', {
@@ -415,7 +408,7 @@ export default function TimeTracking() {
           <div>
             <p className="text-gray-500 text-xs">Branch</p>
             <p className="text-gray-800 font-bold text-lg text-right">
-              {profile?.branch || 'Main'}
+              {profile?.branch?.name || 'Main'}
             </p>
           </div>
         </div>
