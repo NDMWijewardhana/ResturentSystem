@@ -93,138 +93,136 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-md w-full max-w-sm p-8">
+  <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md w-full max-w-sm p-8">
 
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-2">🍽️</div>
-          <h1 className="text-2xl font-bold text-gray-800">Restaurant System</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {step === 'login' && 'Sign in to your account'}
-            {step === '2fa' && 'Two-Factor Authentication'}
-            {step === 'setup-prompt' && 'Secure Your Account'}
-          </p>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="bg-red-50 text-red-600 text-sm rounded-lg px-4 py-3 mb-4">
-            {error}
-          </div>
-        )}
-
-        {/* STEP 1 — Login form */}
-        {step === 'login' && (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="••••••••"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-        )}
-
-        {/* STEP 2 — 2FA verify */}
-        {step === '2fa' && (
-          <form onSubmit={handleVerify2FA} className="space-y-4">
-            <div className="bg-blue-50 rounded-xl p-4 text-center mb-2">
-              <p className="text-blue-800 text-sm">
-                Open your <strong>Authenticator app</strong> and enter the 6-digit code
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                6-digit code
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={otp}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                required
-                maxLength={6}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-center text-2xl tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="000000"
-                autoFocus
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading || otp.length !== 6}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
-            >
-              {loading ? 'Verifying...' : 'Verify Code'}
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="w-full text-sm text-gray-500 hover:text-gray-700 py-2"
-            >
-              ← Back to Login
-            </button>
-          </form>
-        )}
-
-        {/* STEP 3 — Prompt to set up 2FA */}
-        {step === 'setup-prompt' && (
-          <div className="space-y-4">
-            <div className="bg-yellow-50 rounded-xl p-4 text-center">
-              <div className="text-3xl mb-2">🔐</div>
-              <p className="text-yellow-800 text-sm font-medium">
-                 Two-Factor Authentication Required
-              </p>
-              <p className="text-yellow-700 text-xs mt-1">
-                Your account must be protected with 2FA before you can continue. This is required for all staff.
-              </p>
-            </div>
-
-            <button
-              onClick={() => router.push('/setup-2fa')}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
-            >
-              🔐 Set Up 2FA Now
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="w-full text-sm text-gray-400 hover:text-gray-600 py-1"
-            >
-              ← Back to Login
-            </button>
-          </div>
-        )}
-
+      {/* Logo */}
+      <div className="text-center mb-8">
+        <div className="text-4xl mb-2">🍽️</div>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Restaurant System</h1>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+          {step === 'login' && 'Sign in to your account'}
+          {step === '2fa' && 'Two-Factor Authentication'}
+          {step === 'setup-prompt' && 'Secure Your Account'}
+        </p>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-300 text-sm rounded-lg px-4 py-3 mb-4">
+          {error}
+        </div>
+      )}
+
+      {/* Login Form */}
+      {step === 'login' && (
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              placeholder="••••••••"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+      )}
+
+      {/* 2FA Form */}
+      {step === '2fa' && (
+        <form onSubmit={handleVerify2FA} className="space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-900 rounded-xl p-4 text-center mb-2">
+            <p className="text-blue-800 dark:text-blue-200 text-sm">
+              Open your <strong>Authenticator app</strong> and enter the 6-digit code
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              6-digit code
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={otp}
+              onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+              required
+              maxLength={6}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-center text-2xl tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              placeholder="000000"
+              autoFocus
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading || otp.length !== 6}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            {loading ? 'Verifying...' : 'Verify Code'}
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 py-2"
+          >
+            ← Back to Login
+          </button>
+        </form>
+      )}
+
+      {/* Setup prompt */}
+      {step === 'setup-prompt' && (
+        <div className="space-y-4">
+          <div className="bg-yellow-50 dark:bg-yellow-900 rounded-xl p-4 text-center">
+            <div className="text-3xl mb-2">🔐</div>
+            <p className="text-yellow-800 dark:text-yellow-200 text-sm font-medium">
+              Two-Factor Authentication Required
+            </p>
+            <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-1">
+              Your account must be protected with 2FA before you can continue.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/settings')}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+          >
+            🔐 Set Up 2FA Now
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full text-gray-400 dark:text-gray-500 text-sm hover:text-gray-600 py-2"
+          >
+            ← Back to Login
+          </button>
+        </div>
+      )}
+
     </div>
-  )
+  </div>
+)
 }

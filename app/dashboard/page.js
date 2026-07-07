@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
 
 export default function Dashboard() {
   const [profile, setProfile] = useState(null)
@@ -227,7 +228,7 @@ async function loadProfile() {
   // Collapsible section component
   function CollapsibleCard({ title, badge, badgeColor, expanded, onToggle, children, onAction, actionLabel, actionPath }) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
         <button
           onClick={onToggle}
           className="w-full px-5 py-4 flex justify-between items-center hover:bg-gray-50 transition"
@@ -273,16 +274,13 @@ async function loadProfile() {
   // ── STAFF VIEW ──
   if (profile?.role !== 'branch_manager') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-gray-800">🍽️ Restaurant System</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition"
-          >
-            Logout
-          </button>
-        </nav>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <NavBar
+          title="🍽️ Restaurant System"
+          rightAction={handleLogout}
+          rightLabel="Logout"
+          rightStyle="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition"
+        />
 
         <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
 
@@ -304,45 +302,45 @@ async function loadProfile() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => router.push('/time-tracking')}
-              className="bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition"
+              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
             >
               <p className="text-3xl mb-2">⏱️</p>
-              <p className="font-semibold text-gray-800 text-sm">Clock In/Out</p>
-              <p className="text-gray-400 text-xs mt-0.5">Track your hours</p>
+              <p className="text-gray-800 dark:text-gray-200 text-sm">Clock In/Out</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs">Track your hours</p>
             </button>
             <button
               onClick={() => router.push('/my-schedule')}
-              className="bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition"
+              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
             >
               <p className="text-3xl mb-2">📅</p>
-              <p className="font-semibold text-gray-800 text-sm">My Schedule</p>
-              <p className="text-gray-400 text-xs mt-0.5">View your shifts</p>
+              <p className="text-gray-800 dark:text-gray-200 text-sm">My Schedule</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs">View your shifts</p>
             </button>
             <button
               onClick={() => router.push('/requests')}
-              className="bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition"
+              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
             >
               <p className="text-3xl mb-2">🏖️</p>
-              <p className="font-semibold text-gray-800 text-sm">Leave & Shifts</p>
-              <p className="text-gray-400 text-xs mt-0.5">Apply or swap</p>
+              <p className="text-gray-800 dark:text-gray-200 text-sm">Leave & Shifts</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs">Apply or swap</p>
             </button>
             <button
               onClick={() => router.push('/stock')}
-              className="bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition"
+              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
             >
               <p className="text-3xl mb-2">📦</p>
-              <p className="font-semibold text-gray-800 text-sm">Stock Request</p>
-              <p className="text-gray-400 text-xs mt-0.5">Request reorders</p>
+              <p className="text-gray-800 dark:text-gray-200 text-sm">Stock Request</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs">Request reorders</p>
             </button>
           </div>
 
           {/* Settings */}
           <button
             onClick={() => router.push('/settings')}
-            className="w-full bg-white rounded-2xl shadow-sm p-4 flex items-center gap-3 hover:shadow-md transition"
+            className="w-full text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
           >
-            <span className="text-xl">⚙️</span>
-            <span className="text-gray-700 text-sm font-medium">Settings & 2FA</span>
+            <span className="text-xl font-medium text-gray-600 dark:text-gray-300 ">⚙️</span>
+            <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">Settings & 2FA</span>
             <span className="ml-auto text-gray-300">→</span>
           </button>
 
@@ -366,18 +364,15 @@ async function loadProfile() {
     })
   }
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
 
       {/* Nav with logout */}
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <h1 className="text-lg font-bold text-gray-800">🍽️ Restaurant System</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition"
-        >
-          Logout
-        </button>
-      </nav>
+      <NavBar
+        title="🍽️ Restaurant System"
+        rightAction={handleLogout}
+        rightLabel="Logout"
+        rightStyle="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition"
+      />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
@@ -395,12 +390,12 @@ async function loadProfile() {
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-2xl shadow-sm p-4 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center">
             <p className="text-3xl font-bold text-blue-600">{staffClockedIn.length}</p>
             <p className="text-gray-500 text-xs mt-1">On duty now</p>
           </div>
           <div
-            className="bg-white rounded-2xl shadow-sm p-4 text-center cursor-pointer hover:shadow-md transition"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center"
             onClick={() => setShowPendingAlerts(!showPendingAlerts)}
           >
             <p className={'text-3xl font-bold ' + (totalPending > 0 ? 'text-orange-500' : 'text-gray-800')}>
@@ -409,7 +404,7 @@ async function loadProfile() {
             <p className="text-gray-500 text-xs mt-1">Pending actions</p>
           </div>
           <div
-            className="bg-white rounded-2xl shadow-sm p-4 text-center cursor-pointer hover:shadow-md transition"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center"
             onClick={() => setShowLowStock(!showLowStock)}
           >
             <p className={'text-3xl font-bold ' + (lowStockItems.length > 0 ? 'text-red-500' : 'text-gray-800')}>
@@ -429,7 +424,7 @@ async function loadProfile() {
         >
           <div className="px-5 py-3 space-y-2">
             {totalPending === 0 ? (
-              <p className="text-gray-400 text-sm py-2 text-center">No pending actions</p>
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">No pending actions</p>
             ) : (
               <>
                 {pendingLeave > 0 && (
