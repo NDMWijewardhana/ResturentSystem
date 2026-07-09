@@ -226,48 +226,57 @@ async function loadProfile() {
   }
 
   // Collapsible section component
-  function CollapsibleCard({ title, badge, badgeColor, expanded, onToggle, children, onAction, actionLabel, actionPath }) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
-        <button
-          onClick={onToggle}
-          className="w-full px-5 py-4 flex justify-between items-center hover:bg-gray-50 transition"
-        >
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-gray-700 text-sm">{title}</span>
-            {badge > 0 && (
-              <span className={'text-white text-xs px-2 py-0.5 rounded-full font-medium ' + (badgeColor || 'bg-blue-500')}>
-                {badge}
-              </span>
-            )}
-          </div>
-          <span className={'text-gray-400 text-lg transition-transform duration-200 ' + (expanded ? 'rotate-180' : '')}>
-            ▾
+  function CollapsibleCard({ title, badge, badgeColor, expanded, onToggle, children, actionLabel, actionPath }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full px-5 py-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+      >
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">
+            {title}
           </span>
-        </button>
+          {badge > 0 && (
+            <span className={'text-white text-xs px-2 py-0.5 rounded-full font-medium ' + (badgeColor || 'bg-blue-500')}>
+              {badge}
+            </span>
+          )}
+        </div>
+        <span
+          className="text-gray-400 dark:text-gray-500 text-lg"
+          style={{
+            display: 'inline-block',
+            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s'
+          }}
+        >
+          ▾
+        </span>
+      </button>
 
-        {expanded && (
-          <div className="border-t border-gray-100">
-            {children}
-            {actionLabel && actionPath && (
-              <div className="px-5 py-3 border-t border-gray-50">
-                <button
-                  onClick={() => router.push(actionPath)}
-                  className="text-blue-500 text-xs font-medium hover:text-blue-700"
-                >
-                  {actionLabel} →
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    )
-  }
+      {expanded && (
+        <div className="border-t border-gray-100 dark:border-gray-700">
+          {children}
+          {actionLabel && actionPath && (
+            <div className="px-5 py-3 border-t border-gray-50 dark:border-gray-700">
+              <button
+                onClick={() => router.push(actionPath)}
+                className="text-blue-500 dark:text-blue-400 text-xs font-medium hover:text-blue-700 dark:hover:text-blue-300"
+              >
+                {actionLabel} →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading...</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center  dark:bg-gray-800">
+      <p className="text-gray-500 dark:text-white">Loading...</p>
     </div>
   )
 
@@ -302,7 +311,7 @@ async function loadProfile() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => router.push('/time-tracking')}
-              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
+              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-800 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-gray-700 transition"
             >
               <p className="text-3xl mb-2">⏱️</p>
               <p className="text-gray-800 dark:text-gray-200 text-sm">Clock In/Out</p>
@@ -310,7 +319,7 @@ async function loadProfile() {
             </button>
             <button
               onClick={() => router.push('/my-schedule')}
-              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
+              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-800 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-gray-700 transition"
             >
               <p className="text-3xl mb-2">📅</p>
               <p className="text-gray-800 dark:text-gray-200 text-sm">My Schedule</p>
@@ -318,7 +327,7 @@ async function loadProfile() {
             </button>
             <button
               onClick={() => router.push('/requests')}
-              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
+              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-800 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-gray-700 transition"
             >
               <p className="text-3xl mb-2">🏖️</p>
               <p className="text-gray-800 dark:text-gray-200 text-sm">Leave & Shifts</p>
@@ -326,7 +335,7 @@ async function loadProfile() {
             </button>
             <button
               onClick={() => router.push('/stock')}
-              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
+              className="text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-800 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-gray-700 transition"
             >
               <p className="text-3xl mb-2">📦</p>
               <p className="text-gray-800 dark:text-gray-200 text-sm">Stock Request</p>
@@ -337,7 +346,7 @@ async function loadProfile() {
           {/* Settings */}
           <button
             onClick={() => router.push('/settings')}
-            className="w-full text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-700 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-blue-900 transition"
+            className="w-full text-left flex flex-col gap-1 bg-white shadow-sm dark:bg-gray-800 rounded-xl p-3 hover:bg-blue-50 dark:hover:bg-gray-700 transition"
           >
             <span className="text-xl font-medium text-gray-600 dark:text-gray-300 ">⚙️</span>
             <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">Settings & 2FA</span>
@@ -392,16 +401,16 @@ async function loadProfile() {
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center">
             <p className="text-3xl font-bold text-blue-600">{staffClockedIn.length}</p>
-            <p className="text-gray-500 text-xs mt-1">On duty now</p>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">On duty now</p>
           </div>
           <div
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center"
             onClick={() => setShowPendingAlerts(!showPendingAlerts)}
           >
-            <p className={'text-3xl font-bold ' + (totalPending > 0 ? 'text-orange-500' : 'text-gray-800')}>
+            <p className={'text-3xl font-bold ' + (totalPending > 0 ? 'text-orange-500' : 'dark:text-blue-600')}>
               {totalPending}
             </p>
-            <p className="text-gray-500 text-xs mt-1">Pending actions</p>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">Pending actions</p>
           </div>
           <div
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center"
@@ -410,7 +419,7 @@ async function loadProfile() {
             <p className={'text-3xl font-bold ' + (lowStockItems.length > 0 ? 'text-red-500' : 'text-gray-800')}>
               {lowStockItems.length}
             </p>
-            <p className="text-gray-500 text-xs mt-1">Low stock</p>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">Low stock</p>
           </div>
         </div>
 
@@ -424,34 +433,48 @@ async function loadProfile() {
         >
           <div className="px-5 py-3 space-y-2">
             {totalPending === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">No pending actions</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm py-2 text-center">
+                No pending actions
+              </p>
             ) : (
               <>
                 {pendingLeave > 0 && (
                   <button
                     onClick={() => router.push('/approvals')}
-                    className="w-full flex justify-between items-center bg-orange-50 rounded-xl px-4 py-3 hover:bg-orange-100 transition"
+                    className="w-full flex justify-between items-center bg-orange-50 dark:bg-orange-900 rounded-xl px-4 py-3 hover:bg-orange-100 dark:hover:bg-orange-800 transition"
                   >
-                    <span className="text-orange-700 text-sm font-medium">🏖️ Leave Requests</span>
-                    <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingLeave}</span>
+                    <span className="text-orange-700 dark:text-orange-300 text-sm font-medium">
+                      🏖️ Leave Requests
+                    </span>
+                    <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {pendingLeave}
+                    </span>
                   </button>
                 )}
                 {pendingShift > 0 && (
                   <button
                     onClick={() => router.push('/approvals')}
-                    className="w-full flex justify-between items-center bg-purple-50 rounded-xl px-4 py-3 hover:bg-purple-100 transition"
+                    className="w-full flex justify-between items-center bg-purple-50 dark:bg-purple-900 rounded-xl px-4 py-3 hover:bg-purple-100 dark:hover:bg-purple-800 transition"
                   >
-                    <span className="text-purple-700 text-sm font-medium">🔄 Shift Change Requests</span>
-                    <span className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingShift}</span>
+                    <span className="text-purple-700 dark:text-purple-300 text-sm font-medium">
+                      🔄 Shift Change Requests
+                    </span>
+                    <span className="bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {pendingShift}
+                    </span>
                   </button>
                 )}
                 {pendingStock > 0 && (
                   <button
                     onClick={() => router.push('/stock-manager')}
-                    className="w-full flex justify-between items-center bg-blue-50 rounded-xl px-4 py-3 hover:bg-blue-100 transition"
+                    className="w-full flex justify-between items-center bg-blue-50 dark:bg-blue-900 rounded-xl px-4 py-3 hover:bg-blue-100 dark:hover:bg-blue-800 transition"
                   >
-                    <span className="text-blue-700 text-sm font-medium">📦 Stock Requests</span>
-                    <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingStock}</span>
+                    <span className="text-blue-700 dark:text-blue-300 text-sm font-medium">
+                      📦 Stock Requests
+                    </span>
+                    <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {pendingStock}
+                    </span>
                   </button>
                 )}
               </>
@@ -596,9 +619,9 @@ async function loadProfile() {
           )}
         </CollapsibleCard>
 
-        {/* Branch overview - shows all branches */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <h3 className="font-semibold text-gray-700 text-sm mb-3">🏢 Branch Overview</h3>
+        {/* Branch overview - shows all branches */}     
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm">🏢 Branch Overview</h3>
           <div className="space-y-2">
             {staffClockedIn.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-2">No staff on duty</p>
@@ -617,9 +640,9 @@ async function loadProfile() {
           </div>
         </div>
 
-        {/* Quick navigation */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <h3 className="font-semibold text-gray-700 text-sm mb-3">Quick Navigation</h3>
+        {/* Quick navigation */}        
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm mb-3">Quick Navigation</h3>
           <div className="grid grid-cols-3 gap-2">
             {[
               { icon: '📅', label: 'Schedules', path: '/schedules' },
@@ -633,10 +656,10 @@ async function loadProfile() {
                 <button
                   key={item.path}
                   onClick={() => router.push(item.path)}
-                  className="flex flex-col items-center gap-1 bg-gray-50 rounded-xl p-3 hover:bg-blue-50 transition"
+                  className="flex flex-col items-center gap-1 rounded-xl p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                 >
                   <span className="text-2xl">{item.icon}</span>
-                  <span className="text-xs font-medium text-gray-600">{item.label}</span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{item.label}</span>
                 </button>
               )
             })}

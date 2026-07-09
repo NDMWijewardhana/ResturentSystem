@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
 
 export default function MySchedule() {
   const [schedules, setSchedules] = useState([])
@@ -89,36 +90,36 @@ export default function MySchedule() {
   const totalHours = schedules.reduce((sum, s) => sum + parseFloat(calcHours(s.start_time, s.end_time)), 0)
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading your schedule...</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-800">
+      <p className="text-gray-500 dark:text-white">Loading your schedule...</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Nav */}
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <button onClick={() => router.push('/dashboard')} className="text-blue-500 text-sm font-medium">
-          ← Dashboard
-        </button>
-        <h1 className="text-lg font-bold text-gray-800">📅 My Schedule</h1>
-        <div className="w-16" />
-      </nav>
+      <NavBar
+        title="📅 My Schedule"
+        backPath="/dashboard"
+        backLabel="Dashboard"
+      />
 
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg mx-auto px-4 py-6 ">
 
         {/* Week navigator */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 mb-4 flex items-center justify-between">
-          <button onClick={goToPrevWeek} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+        <div className="bg-white rounded-2xl shadow-sm p-4 mb-4 flex items-center justify-between dark:bg-gray-700 dark:hover:bg-gray-600 transition">
+          <button onClick={goToPrevWeek} className="bg-gray-100 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500
+           hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
             ← Prev
           </button>
           <div className="text-center">
-            <p className="font-semibold text-gray-800 text-sm">
+            <p className="font-semibold text-gray-800 text-sm dark:text-white">
               {formatDate(weekDays[0]).split(',')[0]} – {formatDate(weekDays[6]).split(',')[0]}
             </p>
-            <p className="text-gray-400 text-xs">{schedules.length} shifts · {totalHours.toFixed(1)} hrs</p>
+            <p className="text-gray-400 text-xs dark:text-gray-400">{schedules.length} shifts · {totalHours.toFixed(1)} hrs</p>
           </div>
-          <button onClick={goToNextWeek} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+          <button onClick={goToNextWeek} className="bg-gray-100 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500
+           hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
             Next →
           </button>
         </div>
@@ -132,12 +133,12 @@ export default function MySchedule() {
             return (
               <div
                 key={day}
-                className={`bg-white rounded-2xl shadow-sm overflow-hidden ${isToday ? 'ring-2 ring-blue-500' : ''}`}
+                className={`bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden ${isToday ? 'ring-2 ring-blue-500' : ''}`}
               >
-                <div className={`px-4 py-3 ${isToday ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                  <span className={`font-semibold text-sm ${isToday ? 'text-blue-700' : 'text-gray-600'}`}>
+                <div className={`px-4 py-3 ${isToday ? 'bg-blue-50 dark:bg-blue-900' : 'bg-gray-50 dark:bg-gray-700'}`}>
+                 <span className={`font-semibold text-sm ${isToday ? 'text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-300'}`}>
                     {formatDate(day)}
-                  </span>
+                 </span>
                   {isToday && (
                     <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">Today</span>
                   )}
@@ -145,10 +146,10 @@ export default function MySchedule() {
 
                 <div className="px-4 py-3">
                   {dayShifts.length === 0 ? (
-                    <p className="text-gray-400 text-sm text-center py-1">Day off</p>
+                    <p className="text-gray-400 text-sm text-center py-1 dark:text-white">Day off</p>
                   ) : (
                     dayShifts.map(shift => (
-                      <div key={shift.id} className="flex items-center justify-between">
+                      <div key={shift.id} className="flex items-center justify-between ">
                         <div>
                           <p className="font-medium text-gray-800 text-sm">
                             {formatTime(shift.start_time)} – {formatTime(shift.end_time)}

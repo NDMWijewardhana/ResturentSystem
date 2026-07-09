@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
 
 export default function RequestsPage() {
   const [profile, setProfile] = useState(null)
@@ -165,25 +166,20 @@ export default function RequestsPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading...</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-800">
+      <p className="text-gray-500 dark:text-white">Loading...</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <button onClick={() => router.push('/dashboard')} className="text-blue-500 text-sm font-medium">
-          ← Dashboard
-        </button>
-        <h1 className="text-lg font-bold text-gray-800">📋 My Requests</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-        >
-          + New
-        </button>
-      </nav>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <NavBar
+        title="📋 My Requests"
+        backPath="/dashboard"
+        backLabel="Dashboard"
+        rightAction={() => setShowForm(true)}
+        rightLabel="+ New"
+      />
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
 
