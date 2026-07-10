@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
 
 export default function StockPage() {
   const [profile, setProfile] = useState(null)
@@ -169,8 +170,8 @@ async function handleSubmit(e) {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading...</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-800">
+      <p className="text-gray-500 dark:text-white">Loading...</p>
     </div>
   )
   {!profile?.branch_id && (
@@ -185,19 +186,14 @@ async function handleSubmit(e) {
   const lowStockCount = stockItems.filter(i => getStockLevel(i) !== 'ok').length
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <button onClick={() => router.push('/dashboard')} className="text-blue-500 text-sm font-medium">
-          ← Dashboard
-        </button>
-        <h1 className="text-lg font-bold text-gray-800">📦 Stock</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-        >
-          + Request
-        </button>
-      </nav>
+    <div className="min-h-screen bg-gray-50  dark:bg-gray-800">
+      <NavBar
+        title="📦 Stock"
+        backPath="/dashboard"
+        backLabel="Dashboard"
+        rightAction={() => setShowForm(true)}
+        rightLabel="+ Request"
+      />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
@@ -209,13 +205,14 @@ async function handleSubmit(e) {
 
         {/* Low stock alert */}
         {lowStockCount > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3 flex items-center gap-3">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3 flex items-center gap-3 dark:bg-gray-600 
+          dark:border-gray-200">
             <span className="text-2xl">⚠️</span>
             <div>
-              <p className="text-yellow-800 text-sm font-medium">
+              <p className="text-yellow-800 text-sm font-medium dark:text-white">
                 {lowStockCount} item{lowStockCount > 1 ? 's' : ''} need attention
               </p>
-              <p className="text-yellow-600 text-xs">
+              <p className="text-yellow-600 text-xs dark:text-amber-50">
                 Check stock levels and submit reorder requests
               </p>
             </div>
@@ -223,22 +220,22 @@ async function handleSubmit(e) {
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-2">
+        <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-2 dark:bg-gray-700 ">
           <button
             onClick={() => setActiveTab('items')}
             className={'flex-1 py-3 rounded-xl text-sm font-medium transition ' +
-              (activeTab === 'items' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}
+              (activeTab === 'items' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600')}
           >
             📋 Stock Levels
           </button>
           <button
             onClick={() => setActiveTab('requests')}
             className={'flex-1 py-3 rounded-xl text-sm font-medium transition ' +
-              (activeTab === 'requests' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}
+              (activeTab === 'requests' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600')}
           >
             🔄 My Requests
             {requests.filter(r => r.status === 'pending').length > 0 && (
-              <span className="ml-1 bg-red-500 text-white text-xs px-1.5 rounded-full">
+              <span className="ml-1 bg-red-500 text-white text-xs px-1.5 rounded-full ">
                 {requests.filter(r => r.status === 'pending').length}
               </span>
             )}
@@ -249,21 +246,21 @@ async function handleSubmit(e) {
         {activeTab === 'items' && (
           <div className="space-y-3">
             {/* Search */}
-            <div className="bg-white rounded-2xl shadow-sm px-4 py-3">
+            <div className="bg-white dark:bg-gray-700 rounded-2xl shadow-sm px-4 py-3">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search items or categories..."
-                className="w-full text-sm focus:outline-none text-gray-700"
+                className="w-full text-sm focus:outline-none text-gray-700 dark:text-gray-300 bg-transparent placeholder-gray-400 dark:placeholder-gray-600"
               />
             </div>
 
             {Object.entries(groupedItems).map(function([category, items]) {
               return (
-                <div key={category} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                  <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <div key={category} className="bg-white rounded-2xl shadow-sm overflow-hidden dark:bg-gray-600">
+                  <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 dark:bg-gray-700">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide dark:text-white">
                       {category}
                     </p>
                   </div>
@@ -273,8 +270,8 @@ async function handleSubmit(e) {
                       return (
                         <div key={item.id} className="px-4 py-3 flex items-center justify-between">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-800 text-sm">{item.name}</p>
-                            <p className="text-gray-400 text-xs">
+                            <p className="font-medium text-gray-800 text-sm dark:text-white">{item.name}</p>
+                            <p className="text-gray-400 text-xs dark:text-amber-50">
                               Current: {item.current_quantity} {item.unit} · Min: {item.min_quantity} {item.unit}
                             </p>
                           </div>
@@ -306,16 +303,16 @@ async function handleSubmit(e) {
 
         {/* My Requests Tab */}
         {activeTab === 'requests' && (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden dark:bg-gray-800">
             <div className="px-4 py-3 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-700 text-sm">
+              <h3 className="font-semibold text-gray-700 text-sm dark:text-white">
                 My Requests ({requests.length})
               </h3>
             </div>
 
             {requests.length === 0 ? (
               <div className="px-4 py-10 text-center">
-                <p className="text-gray-400 text-sm">No requests yet</p>
+                <p className="text-gray-400 text-sm dark:text-white">No requests yet</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-50">
@@ -323,14 +320,14 @@ async function handleSubmit(e) {
                   return (
                     <div key={req.id} className="px-4 py-4">
                       <div className="flex justify-between items-start mb-1">
-                        <p className="font-medium text-gray-800 text-sm">
+                        <p className="font-medium text-gray-800 text-sm dark:text-white">
                           {req.item?.name}
                         </p>
                         <span className={'text-xs font-medium px-2 py-1 rounded-full ' + getStatusColor(req.status)}>
                           {getStatusLabel(req.status)}
                         </span>
                       </div>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-gray-500 text-xs dark:text-amber-50">
                         Quantity: {req.quantity_requested} {req.item?.unit}
                       </p>
                       <div className="flex items-center gap-2 mt-1">

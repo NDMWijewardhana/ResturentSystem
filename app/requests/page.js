@@ -172,7 +172,7 @@ export default function RequestsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 ">
       <NavBar
         title="📋 My Requests"
         backPath="/dashboard"
@@ -182,7 +182,6 @@ export default function RequestsPage() {
       />
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
-
         {success && (
           <div className="bg-green-50 text-green-700 rounded-xl px-4 py-3 text-sm font-medium">
             ✅ {success}
@@ -193,33 +192,33 @@ export default function RequestsPage() {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => { setRequestType('leave'); setShowForm(true) }}
-            className="bg-white rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition"
+            className="bg-white rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition dark:bg-gray-700 dark:hover:bg-gray-600"
           >
-            <p className="text-2xl mb-1">🏖️</p>
-            <p className="font-semibold text-gray-800 text-sm">Apply Leave</p>
-            <p className="text-gray-400 text-xs">Annual, sick, unpaid</p>
+            <p className="text-2xl mb-1 ">🏖️</p>
+            <p className="font-semibold text-gray-800 text-sm  dark:text-white">Apply Leave</p>
+            <p className="text-gray-400 text-xs  dark:text-amber-50">Annual, sick, unpaid</p>
           </button>
           <button
             onClick={() => { setRequestType('shift_change'); setShowForm(true) }}
-            className="bg-white rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition"
+            className="bg-white rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition dark:bg-gray-700 dark:hover:bg-gray-600"
           >
             <p className="text-2xl mb-1">🔄</p>
-            <p className="font-semibold text-gray-800 text-sm">Shift Change</p>
-            <p className="text-gray-400 text-xs">Request a shift swap</p>
+            <p className="font-semibold text-gray-800 text-sm dark:text-white">Shift Change</p>
+            <p className="text-gray-400 text-xs dark:text-white">Request a shift swap</p>
           </button>
         </div>
 
         {/* Requests list */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden dark:bg-gray-700 ">
           <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-700 text-sm">
+            <h3 className="font-semibold text-gray-700 text-sm dark:text-white">
               Request History ({requests.length})
             </h3>
           </div>
 
           {requests.length === 0 ? (
             <div className="px-4 py-10 text-center">
-              <p className="text-gray-400 text-sm">No requests yet</p>
+              <p className="text-gray-400 text-sm dark:text-white">No requests yet</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
@@ -228,11 +227,11 @@ export default function RequestsPage() {
                   <div key={req.id} className="px-4 py-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <span className="font-medium text-gray-800 text-sm capitalize">
+                        <span className="font-medium text-gray-800 text-sm capitalize dark:text-white">
                           {req.type === 'leave' ? '🏖️ Leave' : '🔄 Shift Change'}
                         </span>
                         {req.leave_type && (
-                          <span className="ml-2 text-gray-400 text-xs capitalize">
+                          <span className="ml-2 text-gray-400 text-xs capitalize dark:text-amber-50">
                             ({req.leave_type})
                           </span>
                         )}
@@ -243,12 +242,12 @@ export default function RequestsPage() {
                     </div>
 
                     {req.type === 'leave' && (
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-gray-500 text-xs dark:text-amber-50 ">
                         {formatDate(req.leave_start_date)} – {formatDate(req.leave_end_date)}
                       </p>
                     )}
                     {req.type === 'shift_change' && (
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-gray-500 text-xs dark:text-amber-50">
                         Requested: {formatDate(req.requested_date)}
                         {req.requested_start_time && ' · ' + formatTime(req.requested_start_time) + ' – ' + formatTime(req.requested_end_time)}
                       </p>
@@ -276,10 +275,10 @@ export default function RequestsPage() {
 
       {/* New Request Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 px-4 dark:bg-gray-800">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 max-h-screen overflow-y-auto dark:bg-gray-700">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">New Request</h2>
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white">New Request</h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 text-xl">✕</button>
             </div>
 
@@ -292,7 +291,7 @@ export default function RequestsPage() {
                   'flex-1 py-2 rounded-lg text-sm font-medium border transition ' +
                   (requestType === 'leave'
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300')
+                    : 'bg-white text-gray-600 border-gray-300 dark:bg-gray-700 dark:text-white')
                 }
               >
                 🏖️ Leave
@@ -304,7 +303,7 @@ export default function RequestsPage() {
                   'flex-1 py-2 rounded-lg text-sm font-medium border transition ' +
                   (requestType === 'shift_change'
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300')
+                    : 'bg-white text-gray-600 border-gray-300 dark:bg-gray-700 dark:text-white')
                 }
               >
                 🔄 Shift Change
@@ -323,7 +322,7 @@ export default function RequestsPage() {
               {requestType === 'leave' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                       Leave Type
                     </label>
                     <select
@@ -339,7 +338,7 @@ export default function RequestsPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                         Start Date
                       </label>
                       <input
@@ -352,7 +351,7 @@ export default function RequestsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                         End Date
                       </label>
                       <input
@@ -372,7 +371,7 @@ export default function RequestsPage() {
               {requestType === 'shift_change' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                       Which shift do you want to change?
                     </label>
                     <select
@@ -397,7 +396,7 @@ export default function RequestsPage() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                       Requested New Date
                     </label>
                     <input
@@ -406,12 +405,12 @@ export default function RequestsPage() {
                       onChange={e => setForm({ ...form, requested_date: e.target.value })}
                       required
                       min={new Date().toISOString().split('T')[0]}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 "
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                         New Start Time
                       </label>
                       <input
@@ -422,7 +421,7 @@ export default function RequestsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                         New End Time
                       </label>
                       <input
@@ -438,7 +437,7 @@ export default function RequestsPage() {
 
               {/* Reason */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                   Reason <span className="text-gray-400">(optional)</span>
                 </label>
                 <textarea
@@ -454,7 +453,8 @@ export default function RequestsPage() {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition"
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition
+                   dark:bg-gray-600 dark:text-amber-50 dark:hover:bg-gray-500"
                 >
                   Cancel
                 </button>

@@ -10,7 +10,7 @@ export default function NavBar({ title, backPath, backLabel, rightAction, rightL
   return (
     <nav className="bg-white dark:bg-gray-900 shadow-sm px-4 py-4 flex justify-between items-center sticky top-0 z-40 border-b border-gray-100 dark:border-gray-800">
       {/* Left side */}
-      <div className="w-24">
+      <div className="flex-1">
         {backPath && (
           <button
             onClick={() => router.push(backPath)}
@@ -25,7 +25,7 @@ export default function NavBar({ title, backPath, backLabel, rightAction, rightL
       <h1 className="text-lg font-bold text-gray-800 dark:text-white">{title}</h1>
 
       {/* Right side */}
-      <div className="w-24 flex justify-end items-center gap-2">
+      <div className="flex-1 flex justify-end items-center gap-2">
         {/* Dark mode toggle */}
         <button
           onClick={toggleDarkMode}

@@ -414,7 +414,7 @@ async function handleOverride(e) {
         </div>
 
         {/* Recent records */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden  dark:bg-gray-700 dark:hover:bg-gray-600">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden  dark:bg-gray-700">
           <div className="px-4 py-3 border-b border-gray-100">
             <h3 className="font-semibold text-gray-700 text-sm dark:text-white">Recent History</h3>
           </div>

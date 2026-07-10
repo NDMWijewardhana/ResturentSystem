@@ -54,3 +54,10 @@ body {
 .dark textarea:focus {
   border-color: #3b82f6;
 }
+
+/* Dark mode placeholder text */
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}

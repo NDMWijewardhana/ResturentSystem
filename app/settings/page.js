@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import QRCode from 'qrcode'
+import NavBar from '@/components/NavBar'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('location')
@@ -452,38 +453,35 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
+        <p className="text-gray-500 dark:text-white">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <button onClick={() => router.push('/dashboard')} className="text-blue-500 text-sm font-medium">
-          ← Dashboard
-        </button>
-        <h1 className="text-lg font-bold text-gray-800">⚙️ Settings</h1>
-        <div className="w-16" />
-      </nav>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
+      <NavBar
+        title="⚙️ Settings"
+        backPath="/dashboard"
+        backLabel="Dashboard"
+      />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
         {/* Tab switcher */}
-        <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-2 overflow-x-auto">
+        <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-2 overflow-x-auto dark:bg-gray-700">
           <button
             onClick={() => setActiveTab('location')}
             className={'flex-1 py-3 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap px-2 ' +
-              (activeTab === 'location' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}
+              (activeTab === 'location' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500')}
           >
             📍 Location
           </button>
           <button
             onClick={() => setActiveTab('2fa')}
             className={'flex-1 py-3 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap px-2 ' +
-              (activeTab === '2fa' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}
+              (activeTab === '2fa' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500')}
           >
             🔐 2FA
             {twoFAStep === 'done' && (
@@ -494,18 +492,18 @@ export default function SettingsPage() {
             <button
               onClick={() => setActiveTab('staff')}
               className={'flex-1 py-3 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap px-2 ' +
-                (activeTab === 'staff' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}
+                (activeTab === 'staff' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500')}
             >
               👥 Staff
             </button>
           )}
         </div>
         {activeTab === 'location' && (
-          <div className="space-y-4">
+          <div className="space-y-4 ">
             {profile?.role !== 'branch_manager' ? (
-              <div className="bg-white rounded-2xl shadow-sm p-6 text-center">
+              <div className="bg-white rounded-2xl shadow-sm p-6 text-center dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500">
                 <p className="text-4xl mb-3">🔒</p>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm dark:text-white">
                   Location settings are only available to branch managers.
                 </p>
               </div>
@@ -513,8 +511,8 @@ export default function SettingsPage() {
               <div className="space-y-4">
 
                 {/* Branch selector */}
-                <div className="bg-white rounded-2xl shadow-sm p-5">
-                  <h3 className="font-semibold text-gray-700 text-sm mb-3">
+                <div className="bg-white rounded-2xl shadow-sm p-5 dark:bg-gray-600 dark:text-white">
+                  <h3 className="font-semibold text-gray-700 text-sm mb-3 dark:text-white">
                     🏢 Select Branch to Configure
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -528,7 +526,7 @@ export default function SettingsPage() {
                             'px-4 py-2 rounded-xl text-sm font-medium border transition ' +
                             (selectedBranchId === b.id
                               ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400')
+                              : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500')
                           }
                         >
                           {b.name}
@@ -542,11 +540,11 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Branch location form */}
-                <div className="bg-white rounded-2xl shadow-sm p-6">
-                  <h2 className="font-bold text-gray-800 mb-1">
+                <div className="bg-white rounded-2xl shadow-sm p-6 dark:bg-gray-600 dark:text-white">
+                  <h2 className="font-bold text-gray-800 mb-1 dark:text-white">
                     📍 {branchSettings.name} — Location Settings
                   </h2>
-                  <p className="text-gray-500 text-sm mb-6">
+                  <p className="text-gray-500 text-sm mb-6 dark:text-amber-50">
                     Stand inside this branch and tap Detect My Location.
                     Staff assigned to this branch must be within the radius to clock in.
                   </p>
@@ -574,7 +572,7 @@ export default function SettingsPage() {
                   <form onSubmit={handleSaveLocation} className="space-y-4">
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                         Branch Address
                       </label>
                       <input
@@ -588,7 +586,7 @@ export default function SettingsPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                           Latitude
                         </label>
                         <input
@@ -600,7 +598,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                           Longitude
                         </label>
                         <input
@@ -614,7 +612,7 @@ export default function SettingsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                         Allowed radius (metres)
                       </label>
                       <div className="flex gap-3">
@@ -628,7 +626,7 @@ export default function SettingsPage() {
                                 'flex-1 py-2 rounded-lg text-sm font-medium border transition ' +
                                 (branchSettings.radius_metres === r
                                   ? 'bg-blue-600 text-white border-blue-600'
-                                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400')
+                                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500')
                               }
                             >
                               {r}m
@@ -646,14 +644,15 @@ export default function SettingsPage() {
                         branchSettings.longitude
                       )}
                       disabled={!branchSettings.latitude || !branchSettings.longitude}
-                      className="w-full bg-gray-50 text-blue-500 py-3 rounded-xl text-sm hover:bg-gray-100 transition disabled:opacity-30"
+                      className="w-full bg-gray-50 text-blue-500 py-3 rounded-xl text-sm hover:bg-gray-100 transition disabled:opacity-30 
+                       dark:bg-gray-800 dark:text-white dark:hover:bg-gray-500"
                     >
                       Verify on Google Maps
                     </button>
 
                     <div className="border-t border-gray-100 pt-4">
-                      <h3 className="font-bold text-gray-800 mb-1">🔓 Override PIN</h3>
-                      <p className="text-gray-500 text-sm mb-3">
+                      <h3 className="font-bold text-gray-800 mb-1 dark:text-white">🔓 Override PIN</h3>
+                      <p className="text-gray-500 text-sm mb-3 dark:text-amber-50">
                         Staff at this branch use this PIN when GPS fails indoors.
                       </p>
                       <input
@@ -668,8 +667,8 @@ export default function SettingsPage() {
 
                     {/* Currency */}
                     <div className="border-t border-gray-100 pt-4">
-                      <h3 className="font-bold text-gray-800 mb-1">💰 Currency</h3>
-                      <p className="text-gray-500 text-sm mb-3">
+                      <h3 className="font-bold text-gray-800 mb-1 dark:text-white">💰 Currency</h3>
+                      <p className="text-gray-500 text-sm mb-3 dark:text-amber-50">
                         Used in payroll reports and calculations.
                       </p>
                       <select
@@ -698,8 +697,8 @@ export default function SettingsPage() {
                 </div>
 
                 {/* All branches overview */}
-                <div className="bg-white rounded-2xl shadow-sm p-5">
-                  <h3 className="font-semibold text-gray-700 text-sm mb-3">
+                <div className="bg-white rounded-2xl shadow-sm p-5 dark:bg-gray-600 dark:text-white">
+                  <h3 className="font-semibold text-gray-700 text-sm mb-3 dark:text-white">
                     All Branches Overview
                   </h3>
                   <div className="space-y-3">
@@ -707,8 +706,8 @@ export default function SettingsPage() {
                       return (
                         <div key={b.id} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
                           <div>
-                            <p className="font-medium text-gray-800 text-sm">{b.name}</p>
-                            <p className="text-gray-400 text-xs">
+                            <p className="font-medium text-gray-800 text-sm dark:text-white">{b.name}</p>
+                            <p className="text-gray-400 text-xs dark:text-amber-50">
                               {b.address || 'No address set'}
                             </p>
                           </div>
@@ -735,12 +734,12 @@ export default function SettingsPage() {
         )}         
         {/* ── 2FA TAB ── */}
         {activeTab === '2fa' && (
-          <div className="bg-white rounded-2xl shadow-sm p-8">
+          <div className="bg-white rounded-2xl shadow-sm p-8 dark:bg-gray-600 dark:text-white">
             {twoFAStep === 'start' && (
               <div className="text-center">
                 <div className="text-5xl mb-4">🔐</div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">Two-Factor Authentication</h2>
-                <p className="text-gray-500 text-sm mb-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-2 dark:text-white">Two-Factor Authentication</h2>
+                <p className="text-gray-500 text-sm mb-6 dark:text-white">
                   Add an extra layer of security using Google Authenticator or any TOTP app.
                 </p>
                 <div className="bg-blue-50 rounded-xl p-4 text-left mb-6">
@@ -766,8 +765,8 @@ export default function SettingsPage() {
             {twoFAStep === 'scan' && (
               <div className="text-center">
                 <div className="text-4xl mb-3">📱</div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">Scan QR Code</h2>
-                <p className="text-gray-500 text-sm mb-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-2 dark:text-white">Scan QR Code</h2>
+                <p className="text-gray-500 text-sm mb-6 dark:text-white">
                   Open your authenticator app and scan this QR code
                 </p>
                 {qrCodeDataUrl && (
@@ -778,9 +777,9 @@ export default function SettingsPage() {
                   </div>
                 )}
                 <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left">
-                  <p className="text-gray-700 text-sm font-medium mb-2">Or enter this key manually:</p>
-                  <div className="bg-white rounded-lg p-3 border border-gray-200">
-                    <p className="text-gray-800 text-sm font-mono break-all select-all text-center">{secret}</p>
+                  <p className="text-gray-700 text-sm font-medium mb-2 dark:text-white">Or enter this key manually:</p>
+                  <div className="bg-white rounded-lg p-3 border border-gray-200 dark:bg-gray-600 dark:text-white">
+                    <p className="text-gray-800 text-sm font-mono break-all select-all text-center dark:text-white">{secret}</p>
                   </div>
                 </div>
                 <button
@@ -795,8 +794,8 @@ export default function SettingsPage() {
             {twoFAStep === 'verify' && (
               <div className="text-center">
                 <div className="text-4xl mb-3">✅</div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">Verify Setup</h2>
-                <p className="text-gray-500 text-sm mb-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-2 dark:text-white">Verify Setup</h2>
+                <p className="text-gray-500 text-sm mb-6 dark:text-white">
                   Enter the 6-digit code from your authenticator app
                 </p>
                 {twoFAError && (
@@ -817,7 +816,7 @@ export default function SettingsPage() {
                   </button>
                   <button
                     type="button" onClick={() => setTwoFAStep('scan')}
-                    className="w-full text-sm text-gray-500 hover:text-gray-700"
+                    className="w-full text-sm text-gray-500 hover:text-gray-700 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500"
                   >
                     Back to QR Code
                   </button>
@@ -828,8 +827,8 @@ export default function SettingsPage() {
             {twoFAStep === 'done' && (
               <div className="text-center">
                 <div className="text-5xl mb-4">🎉</div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">2FA is Active</h2>
-                <p className="text-gray-500 text-sm mb-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-2 dark:text-amber-50">2FA is Active</h2>
+                <p className="text-gray-500 text-sm mb-6 dark:text-white">
                   Your account is protected with two-factor authentication.
                 </p>
                 <div className="bg-green-50 rounded-xl p-4 mb-6 text-left">
@@ -847,8 +846,8 @@ export default function SettingsPage() {
                 )}
                 {/* Staff see a locked message instead */}
                 {profile?.role !== 'branch_manager' && (
-                  <div className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-gray-500 text-xs text-center">
+                  <div className="bg-gray-50 rounded-xl p-3 dark:bg-gray-500 dark:text-white">
+                    <p className="text-gray-500 text-xs text-center dark:text-white">
                       🔒 2FA is mandatory and cannot be disabled for staff accounts
                     </p>
                   </div>
@@ -869,12 +868,12 @@ export default function SettingsPage() {
             )}
 
             {/* Branches */}
-            <div className="bg-white rounded-2xl shadow-sm p-5">
+            <div className="bg-white rounded-2xl shadow-sm p-5 dark:bg-gray-600 dark:text-white">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold text-gray-700 text-sm">🏢 Branches</h3>
+                <h3 className="font-semibold text-gray-700 text-sm dark:text-white">🏢 Branches</h3>
                 <button
                   onClick={() => setShowBranchForm(true)}
-                  className="text-blue-500 text-xs font-medium hover:text-blue-700"
+                  className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition"
                 >
                   + Add Branch
                 </button>
@@ -882,7 +881,7 @@ export default function SettingsPage() {
               <div className="flex flex-wrap gap-2">
                 {branches.map(function(b) {
                   return (
-                    <span key={b.id} className="bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">
+                    <span key={b.id} className="bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full dark:bg-gray-800 dark:text-white">
                       {b.name}
                     </span>
                   )
@@ -891,9 +890,9 @@ export default function SettingsPage() {
             </div>
 
             {/* Staff list */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden dark:bg-gray-600">
               <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="font-semibold text-gray-700 text-sm">All Staff ({staff.length})</h3>
+                <h3 className="font-semibold text-gray-700 text-sm dark:text-white">All Staff ({staff.length})</h3>
                 <button
                   onClick={openAddStaffForm}
                   className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition"
@@ -907,7 +906,7 @@ export default function SettingsPage() {
                   return (
                     <div key={member.id} className="px-5 py-4">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-800 text-sm">{member.full_name}</p>
+                        <p className="font-medium text-gray-800 text-sm dark:text-white">{member.full_name}</p>
                         {!member.is_active && (
                           <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">Inactive</span>
                         )}
@@ -916,8 +915,8 @@ export default function SettingsPage() {
                           {member.role === 'branch_manager' ? 'Manager' : 'Staff'}
                         </span>
                       </div>
-                      <p className="text-gray-500 text-xs mt-0.5">{member.email}</p>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-gray-500 text-xs mt-0.5 dark:text-gray-50">{member.email}</p>
+                      <p className="text-gray-400 text-xs dark:text-gray-200">
                         {member.branch?.name || 'No branch assigned'}
                         {member.phone && ' · ' + member.phone}
                       </p>
@@ -929,7 +928,7 @@ export default function SettingsPage() {
                         <button onClick={() => handleResetPassword(member)} className="text-amber-500 text-xs font-medium hover:text-amber-700">
                           Reset Password
                         </button>
-                        <button onClick={() => handleToggleActive(member)} className="text-gray-500 text-xs font-medium hover:text-gray-700">
+                        <button onClick={() => handleToggleActive(member)} className="text-gray-500 text-xs font-medium hover:text-gray-700 dark:text-gray-50">
                           {member.is_active ? 'Deactivate' : 'Activate'}
                         </button>
                         <button onClick={() => handleDeleteStaff(member)} className="text-red-400 text-xs font-medium hover:text-red-600">

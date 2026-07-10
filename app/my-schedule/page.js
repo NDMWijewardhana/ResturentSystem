@@ -96,7 +96,7 @@ export default function MySchedule() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
       {/* Nav */}
       <NavBar
         title="📅 My Schedule"
@@ -133,7 +133,7 @@ export default function MySchedule() {
             return (
               <div
                 key={day}
-                className={`bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden ${isToday ? 'ring-2 ring-blue-500' : ''}`}
+                className={`bg-white dark:bg-gray-600 rounded-2xl shadow-sm overflow-hidden ${isToday ? 'ring-2 ring-blue-500' : ''}`}
               >
                 <div className={`px-4 py-3 ${isToday ? 'bg-blue-50 dark:bg-blue-900' : 'bg-gray-50 dark:bg-gray-700'}`}>
                  <span className={`font-semibold text-sm ${isToday ? 'text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-300'}`}>
