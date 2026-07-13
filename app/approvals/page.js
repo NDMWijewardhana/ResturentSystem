@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
 
 export default function ApprovalsPage() {
   const [requests, setRequests] = useState([])
@@ -125,32 +126,23 @@ export default function ApprovalsPage() {
   const pendingCount = requests.filter(r => r.status === 'pending').length
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading...</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-800">
+      <p className="text-gray-500 dark:text-white">Loading...</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <button onClick={() => router.push('/dashboard')} className="text-blue-500 text-sm font-medium">
-          ← Dashboard
-        </button>
-        <h1 className="text-lg font-bold text-gray-800">
-          ✅ Approvals
-          {pendingCount > 0 && filter !== 'pending' && (
-            <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-              {pendingCount}
-            </span>
-          )}
-        </h1>
-        <div className="w-16" />
-      </nav>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
+     <NavBar
+        title="✅ Approvals"
+        backPath="/dashboard"
+        backLabel="Dashboard"
+      />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
         {/* Filter tabs */}
-        <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-2">
+        <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-2 dark:bg-gray-700">
           {['pending', 'approved', 'rejected', 'all'].map(function(f) {
             return (
               <button
@@ -176,22 +168,22 @@ export default function ApprovalsPage() {
 
         {/* Requests */}
         {requests.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm p-10 text-center">
-            <p className="text-gray-400 text-sm">No {filter} requests</p>
+          <div className="bg-white rounded-2xl shadow-sm p-10 text-center dark:bg-gray-700">
+            <p className="text-gray-400 text-sm dark:text-white">No {filter} requests</p>
           </div>
         ) : (
           <div className="space-y-3">
             {requests.map(function(req) {
               return (
-                <div key={req.id} className="bg-white rounded-2xl shadow-sm p-5">
+                <div key={req.id} className="bg-white rounded-2xl shadow-sm p-5 dark:bg-gray-700">
 
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <p className="font-semibold text-gray-800">
+                      <p className="font-semibold text-gray-800 dark:text-white">
                         {req.staff?.full_name}
                       </p>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-gray-500 text-xs dark:text-gray-300">
                         {req.type === 'leave' ? '🏖️ Leave Request' : '🔄 Shift Change'}
                         {req.leave_type && ' · ' + req.leave_type}
                       </p>
@@ -202,13 +194,13 @@ export default function ApprovalsPage() {
                   </div>
 
                   {/* Details */}
-                  <div className="bg-gray-50 rounded-xl p-3 mb-3 space-y-1">
+                  <div className="bg-gray-50 rounded-xl p-3 mb-3 space-y-1 dark:bg-gray-600">
                     {req.type === 'leave' && (
                       <>
-                        <p className="text-gray-600 text-sm">
+                        <p className="text-gray-600 text-sm dark:text-white">
                           From: <strong>{formatDate(req.leave_start_date)}</strong>
                         </p>
-                        <p className="text-gray-600 text-sm">
+                        <p className="text-gray-600 text-sm dark:text-gray-300">
                           To: <strong>{formatDate(req.leave_end_date)}</strong>
                         </p>
                       </>
@@ -216,7 +208,7 @@ export default function ApprovalsPage() {
                     {req.type === 'shift_change' && (
                       <>
                         {req.shift && (
-                          <p className="text-gray-600 text-sm">
+                          <p className="text-gray-600 text-sm dark:text-gray-300">
                             Current shift: <strong>
                               {formatDate(req.shift.shift_date)} · {formatTime(req.shift.start_time)} – {formatTime(req.shift.end_time)}
                             </strong>
@@ -229,7 +221,7 @@ export default function ApprovalsPage() {
                       </>
                     )}
                     {req.reason && (
-                      <p className="text-gray-500 text-xs mt-1">
+                      <p className="text-gray-500 text-xs mt-1 dark:text-gray-200">
                         Reason: {req.reason}
                       </p>
                     )}

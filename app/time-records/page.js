@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
 
 export default function TimeRecordsManager() {
   const [records, setRecords] = useState([])
@@ -131,33 +132,28 @@ export default function TimeRecordsManager() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Loading records...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-800">
+        <p className="text-gray-500 dark:text-white">Loading records...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
 
       {/* Nav */}
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="text-blue-500 text-sm font-medium"
-        >
-          ← Dashboard
-        </button>
-        <h1 className="text-lg font-bold text-gray-800">⏱️ Time Records</h1>
-        <div className="w-16" />
-      </nav>
+     <NavBar
+        title="⏱️ Time Records"
+        backPath="/dashboard"
+        backLabel="Dashboard"
+      />
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col sm:flex-row gap-3">
+        <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col sm:flex-row gap-3 dark:bg-gray-700">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-gray-500 mb-1 dark:text-white">
               Month
             </label>
             <input
@@ -168,7 +164,7 @@ export default function TimeRecordsManager() {
             />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-gray-500 mb-1 dark:text-white">
               Staff Member
             </label>
             <select
@@ -188,16 +184,16 @@ export default function TimeRecordsManager() {
 
         {/* Monthly summary */}
         {getTotalByStaff().length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-4">
-            <h3 className="font-semibold text-gray-700 text-sm mb-3">
+          <div className="bg-white rounded-2xl shadow-sm p-4 dark:bg-gray-600">
+            <h3 className="font-semibold text-gray-700 text-sm mb-3 dark:text-white">
               Monthly Summary
             </h3>
             <div className="space-y-2">
               {getTotalByStaff().map(function(item) {
                 return (
                   <div key={item[0]} className="flex justify-between items-center">
-                    <span className="text-gray-700 text-sm">{item[0]}</span>
-                    <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
+                    <span className="text-gray-700 text-sm dark:text-amber-50">{item[0]}</span>
+                    <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full dark:bg-blue-500 dark:text-white">
                       {formatDuration(item[1])}
                     </span>
                   </div>
@@ -208,16 +204,16 @@ export default function TimeRecordsManager() {
         )}
 
         {/* Records list */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden dark:bg-gray-600">
           <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-700 text-sm">
+            <h3 className="font-semibold text-gray-700 text-sm dark:text-white">
               All Records ({records.length})
             </h3>
           </div>
 
           {records.length === 0 ? (
             <div className="px-4 py-10 text-center">
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-sm dark:text-white">
                 No records found for this period
               </p>
             </div>
@@ -228,23 +224,23 @@ export default function TimeRecordsManager() {
                   <div key={record.id} className="px-4 py-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-gray-800 text-sm font-medium">
+                        <p className="text-gray-800 text-sm font-medium dark:text-amber-50">
                           {record.staff ? record.staff.full_name : 'Unknown'}
                         </p>
-                        <p className="text-gray-500 text-xs">
+                        <p className="text-gray-500 text-xs dark:text-gray-300">
                           In: {formatDateTime(record.clock_in)}
                         </p>
-                        <p className="text-gray-500 text-xs">
+                        <p className="text-gray-500 text-xs dark:text-gray-200">
                           Out: {formatDateTime(record.clock_out)}
                         </p>
                         {record.notes && (
-                          <p className="text-gray-400 text-xs mt-0.5">
+                          <p className="text-gray-400 text-xs mt-0.5 dark:text-gray-300">
                             {record.notes}
                           </p>
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
+                        <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full dark:bg-blue-500 dark:text-white">
                           {formatDuration(record.total_minutes)}
                         </span>
                         <div className="flex gap-2">
@@ -258,7 +254,7 @@ export default function TimeRecordsManager() {
                                     .toISOString().slice(0, 16)
                                 : ''
                             })}
-                            className="text-blue-500 text-xs hover:text-blue-700"
+                            className="text-blue-500 text-xs hover:text-blue-700 dark:text-gray-300 dark:hover:text-white"
                           >
                             Edit
                           </button>

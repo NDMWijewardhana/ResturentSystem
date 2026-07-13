@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
 
 export default function SchedulesPage() {
   const [profile, setProfile] = useState(null)
@@ -205,26 +206,21 @@ export default function SchedulesPage() {
   const weekDays = getWeekDays(selectedWeek)
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading schedules...</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-900">
+      <p className="text-gray-500 dark:text-white">Loading schedules...</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
       {/* Nav */}
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <button onClick={() => router.push('/dashboard')} className="text-blue-500 text-sm font-medium">
-          ← Dashboard
-        </button>
-        <h1 className="text-lg font-bold text-gray-800">📅 Work Schedules</h1>
-        <button
-          onClick={() => openAddForm()}
-          className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-        >
-          + Add Shift
-        </button>
-      </nav>
+      <NavBar
+        title="📅 Work Schedules"
+        backPath="/dashboard"
+        backLabel="Dashboard"
+        rightAction={() => openAddForm()}
+        rightLabel="+ Add Shift"
+      />
 
       <div className="max-w-4xl mx-auto px-4 py-6">
 
@@ -236,22 +232,24 @@ export default function SchedulesPage() {
         )}
 
         {/* Week navigator */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 mb-4 flex items-center justify-between">
+        <div className="bg-white rounded-2xl shadow-sm p-4 mb-4 flex items-center justify-between dark:bg-gray-700 ">
           <button
             onClick={goToPrevWeek}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition 
+                       dark:bg-blue-500 dark:text-white dark:hover:bg-blue-400"
           >
             ← Prev
           </button>
           <div className="text-center">
-            <p className="font-semibold text-gray-800 text-sm">
+            <p className="font-semibold text-gray-800 text-sm dark:text-white">
               {formatDate(weekDays[0])} — {formatDate(weekDays[6])}
             </p>
-            <p className="text-gray-400 text-xs mt-0.5">Week View</p>
+            <p className="text-gray-400 text-xs mt-0.5 dark:text-amber-50">Week View</p>
           </div>
           <button
             onClick={goToNextWeek}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition
+                       dark:bg-blue-500 dark:text-white dark:hover:bg-blue-400"
           >
             Next →
           </button>
@@ -269,9 +267,9 @@ export default function SchedulesPage() {
                 className={`bg-white rounded-2xl shadow-sm overflow-hidden ${isToday ? 'ring-2 ring-blue-500' : ''}`}
               >
                 {/* Day header */}
-                <div className={`px-4 py-3 flex justify-between items-center ${isToday ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                <div className={`px-4 py-3 flex justify-between items-center ${isToday ? 'bg-blue-50 dark:bg-gray-700' : 'bg-gray-50 dark:bg-gray-700'}`}>
                   <div>
-                    <span className={`font-semibold text-sm ${isToday ? 'text-blue-700' : 'text-gray-700'}`}>
+                    <span className={`font-semibold text-sm ${isToday ? 'text-blue-700 dark:text-white' : 'text-gray-700 dark:text-white'}`}>
                       {formatDate(day)}
                     </span>
                     {isToday && (
@@ -287,21 +285,21 @@ export default function SchedulesPage() {
                 </div>
 
                 {/* Shifts */}
-                <div className="px-4 py-2">
+                <div className="px-4 py-2 dark:bg-gray-600">
                   {daySchedules.length === 0 ? (
-                    <p className="text-gray-400 text-sm py-2 text-center">No shifts scheduled</p>
+                    <p className="text-gray-400 text-sm py-2 text-center dark:text-white">No shifts scheduled</p>
                   ) : (
                     <div className="space-y-2 py-1">
                       {daySchedules.map(schedule => (
                         <div
                           key={schedule.id}
-                          className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-3"
+                          className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-3 dark:bg-gray-600"
                         >
                           <div>
-                            <p className="font-medium text-gray-800 text-sm">
+                            <p className="font-medium text-gray-800 text-sm dark:text-white">
                               {schedule.staff?.full_name}
                             </p>
-                            <p className="text-gray-500 text-xs">
+                            <p className="text-gray-500 text-xs dark:text-amber-50">
                               {formatTime(schedule.start_time)} – {formatTime(schedule.end_time)}
                               {schedule.position && ` · ${schedule.position}`}
                             </p>
@@ -312,7 +310,7 @@ export default function SchedulesPage() {
                           <div className="flex gap-2 ml-4">
                             <button
                               onClick={() => openEditForm(schedule)}
-                              className="text-blue-500 text-xs font-medium hover:text-blue-700"
+                              className="text-blue-500 text-xs font-medium hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500"
                             >
                               Edit
                             </button>

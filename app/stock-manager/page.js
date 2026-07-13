@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
 
 export default function StockManagerPage() {
   const [requests, setRequests] = useState([])
@@ -217,20 +218,18 @@ async function loadData() {
   const lowStockCount = stockItems.filter(i => getStockLevel(i) !== 'ok').length
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading...</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-gray-800">
+      <p className="text-gray-500 dark:text-white">Loading...</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
-        <button onClick={() => router.push('/dashboard')} className="text-blue-500 text-sm font-medium">
-          ← Dashboard
-        </button>
-        <h1 className="text-lg font-bold text-gray-800">📦 Stock Management</h1>
-        <div className="w-16" />
-      </nav>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
+      <NavBar
+        title="📦 Stock Management"
+        backPath="/dashboard"
+        backLabel="Dashboard"
+      />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
@@ -242,21 +241,21 @@ async function loadData() {
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl shadow-sm p-4">
-            <p className="text-gray-500 text-xs mb-1">Pending Requests</p>
-            <p className="text-2xl font-bold text-gray-800">{pendingCount}</p>
+          <div className="bg-white rounded-2xl shadow-sm p-4 dark:bg-gray-700">
+            <p className="text-gray-500 text-xs mb-1 dark:text-white">Pending Requests</p>
+            <p className="text-2xl font-bold text-gray-800 dark:text-gray-300">{pendingCount}</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm p-4">
-            <p className="text-gray-500 text-xs mb-1">Low Stock Items</p>
-            <p className={'text-2xl font-bold ' + (lowStockCount > 0 ? 'text-red-600' : 'text-gray-800')}>
+          <div className="bg-white rounded-2xl shadow-sm p-4 dark:bg-gray-700">
+            <p className="text-gray-500 text-xs mb-1 dark:text-white">Low Stock Items</p>
+            <p className={'text-2xl font-bold ' + (lowStockCount > 0 ? 'text-red-600 dark:text-red-500' : 'text-gray-800')}>
               {lowStockCount}
             </p>
           </div>
         </div>
         {/* Branch filter */}
         {branches.length > 1 && (
-        <div className="bg-white rounded-2xl shadow-sm p-4">
-            <label className="block text-xs font-medium text-gray-500 mb-2">
+        <div className="bg-white rounded-2xl shadow-sm p-4 dark:bg-gray-700">
+            <label className="block text-xs font-medium text-gray-500 mb-2 dark:text-white">
             Filter by Branch
             </label>
             <div className="flex gap-2 flex-wrap">
@@ -266,7 +265,7 @@ async function loadData() {
                 'px-4 py-2 rounded-lg text-xs font-medium border transition ' +
                 (selectedBranch === 'all'
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400')
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 dark:bg-gray-500 dark:text-white dark:hover:border-white')
                 }
             >
                 All Branches
@@ -280,7 +279,7 @@ async function loadData() {
                     'px-4 py-2 rounded-lg text-xs font-medium border transition ' +
                     (selectedBranch === b.id
                         ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400')
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 dark:bg-gray-500 dark:text-white dark:hover:border-white')
                     }
                 >
                     {b.name}
@@ -291,11 +290,11 @@ async function loadData() {
         </div>
         )}
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-2">
+        <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-2 dark:bg-gray-700">
           <button
             onClick={() => setActiveTab('requests')}
             className={'flex-1 py-3 rounded-xl text-sm font-medium transition ' +
-              (activeTab === 'requests' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}
+              (activeTab === 'requests' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50 dark:bg-gray-600 dark:text-white dark:hover:border-white dark:hover:bg-gray-500')}
           >
             🔄 Requests
             {pendingCount > 0 && (
@@ -305,7 +304,7 @@ async function loadData() {
           <button
             onClick={() => setActiveTab('inventory')}
             className={'flex-1 py-3 rounded-xl text-sm font-medium transition ' +
-              (activeTab === 'inventory' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}
+              (activeTab === 'inventory' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50 dark:bg-gray-600 dark:text-white dark:hover:border-white dark:hover:bg-gray-500')}
           >
             📋 Inventory
             {lowStockCount > 0 && (
@@ -318,14 +317,14 @@ async function loadData() {
         {activeTab === 'requests' && (
           <div className="space-y-3">
             {/* Filter */}
-            <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-1">
+            <div className="bg-white rounded-2xl shadow-sm p-2 flex gap-1 dark:bg-gray-700">
               {['pending', 'approved', 'ordered', 'rejected', 'all'].map(function(f) {
                 return (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
                     className={'flex-1 py-2 rounded-xl text-xs font-medium transition capitalize ' +
-                      (filter === f ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50')}
+                      (filter === f ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50 dark:bg-gray-600 dark:text-white dark:hover:border-white dark:hover:bg-gray-500')}
                   >
                     {f}
                   </button>
